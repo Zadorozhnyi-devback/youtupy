@@ -5,14 +5,14 @@ from typing import Union
 from const import FIRST
 
 
-def make_dirs(dir_path: str, folder_path: str = '') -> None:
+def make_dirs(dir_path: str, new_dir_path: str = '') -> None:
     # print(dir_path)
     dirs = [my_dir for my_dir in dir_path.split('/') if my_dir]
     # print('make dirs', dirs)
     for my_dir in dirs:
-        folder_path += f'{my_dir}/'
+        new_dir_path += f'{my_dir}/'
         try:
-            os.mkdir(folder_path)
+            os.mkdir(new_dir_path)
         except FileExistsError:
             continue
 

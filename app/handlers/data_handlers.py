@@ -18,9 +18,9 @@ def get_dir_path(playlist_title: str, path_to_playlists: str) -> str:
     return path
 
 
-def download_playlist_videos(playlist, dir_path: str) -> None:
+def download_playlist_videos(playlist, output_path: str) -> None:
     for video in playlist.videos:
-        video.streams.filter(only_audio=True).get_audio_only().download(output_path=dir_path)
+        video.streams.filter(only_audio=True).get_audio_only().download(output_path=output_path)
 
 
 def get_dir_mp4_files(dir_path: str) -> List[str]:
