@@ -5,9 +5,9 @@ from urllib.error import URLError
 
 from pytube import Playlist
 
-from const import DESTINATION_PATH, PLAYLIST_URL, DEFAULT_DIR_PATH
-from handlers.data_handlers import download_playlist_videos
-from handlers.validation_handlers import make_dirs, remove_old_dirs, is_integer
+from backend.handlers.data_handlers import download_playlist_videos
+from backend.handlers.validation_handlers import make_dirs, remove_old_dirs, is_integer
+from backend.const import DESTINATION_PATH, PLAYLIST_URL, DEFAULT_DIR_PATH
 
 
 def validate_no_sys_args(sys_args: List[str]) -> None:

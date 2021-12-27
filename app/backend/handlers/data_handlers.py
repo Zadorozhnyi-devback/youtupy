@@ -4,7 +4,7 @@ from typing import List
 
 from pytube import Playlist
 
-from const import PATH_TO_PLAYLISTS, VIDEO_NAME
+from backend.const import PATH_TO_PLAYLISTS, VIDEO_NAME
 
 
 def get_playlist(playlist_url: str) -> Playlist:

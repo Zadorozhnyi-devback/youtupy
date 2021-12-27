@@ -2,7 +2,7 @@ import os
 import shutil
 from typing import Union
 
-from const import FIRST
+from backend.const import FIRST
 
 
 def make_dirs(dir_path: str, new_dir_path: str = '') -> None:
