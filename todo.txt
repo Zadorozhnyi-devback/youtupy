@@ -1,5 +1,3 @@
 tests
-UI
 
-320 bitrate
-speed
+UI: celery

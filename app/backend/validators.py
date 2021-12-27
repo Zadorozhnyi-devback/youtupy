@@ -10,30 +10,30 @@ from backend.handlers.validation_handlers import make_dirs, remove_old_dirs, is_
 from backend.const import DESTINATION_PATH, PLAYLIST_URL, DEFAULT_DIR_PATH
 
 
-def validate_no_sys_args(sys_args: List[str]) -> None:
-    if not sys_args:
-        raise ValueError(
-            """
-    You didn't pass the argument :(
-
-    Please, pass the playlist url as in example below
-
-    Example:
-        python3 youtupy1.py https://some/test/youtube/music/playlist/url/
-            """
-        )
-
-
-def validate_more_then_two_sys_arg(sys_args: List[str]) -> None:
-    if len(sys_args) > 2:
-        raise ValueError(
-            '''
-    Too much arguments
-    
-    First arg should be playlist url and second is optional path to destination folder
-    
-    Please, remove excess arguments'''
-        )
+# def validate_no_sys_args(sys_args: List[str]) -> None:
+#     if not sys_args:
+#         raise ValueError(
+#             """
+#     You didn't pass the argument :(
+#
+#     Please, pass the playlist url as in example below
+#
+#     Example:
+#         python3 youtupy1.py https://some/test/youtube/music/playlist/url/
+#             """
+#         )
+#
+#
+# def validate_more_then_two_sys_arg(sys_args: List[str]) -> None:
+#     if len(sys_args) > 2:
+#         raise ValueError(
+#             '''
+#     Too much arguments
+#
+#     First arg should be playlist url and second is optional path to destination folder
+#
+#     Please, remove excess arguments'''
+#         )
 
 
 def validate_path_existing(dir_path: str) -> None:
@@ -47,7 +47,9 @@ def validate_path_existing(dir_path: str) -> None:
 
 
 def validate_playlist_existing(playlist_url) -> None:
+    print('url', playlist_url)
     playlist = Playlist(url=playlist_url)
+    print('salal', playlist)
     if not playlist.videos:
         raise ValueError(
             '''
@@ -71,10 +73,10 @@ def validate_user_answer(dir_path: str):
         print("Don't understand you")
 
 
-def validate_playlist_loaded(sys_args: List[str]) -> None:
+def validate_playlist_loaded(args: List[str]) -> None:
     # print('sosooso')
-    playlist = Playlist(url=sys_args[PLAYLIST_URL])
-    dir_path = sys_args[DESTINATION_PATH] if len(sys_args) > 1 else DEFAULT_DIR_PATH
+    playlist = Playlist(url=args[PLAYLIST_URL])
+    dir_path = args[DESTINATION_PATH] if len(args) > 1 else DEFAULT_DIR_PATH
     # print('*' * 10, dir_path)
     try:
         dirs = os.listdir(path=dir_path)
@@ -112,13 +114,13 @@ def validate_video_downloading(playlist: Playlist, output_path: str, downloaded:
     )
 
 
-def validate_sys_args(sys_args: List[str]) -> bool:
-    validate_no_sys_args(sys_args=sys_args)
-    validate_more_then_two_sys_arg(sys_args=sys_args)
-    if len(sys_args) > 1:
+def validate_args(args: List[str]) -> bool:
+    # validate_no_sys_args(sys_args=sys_args)
+    # validate_more_then_two_sys_arg(sys_args=sys_args)
+    if len(args) > 1:
         # print('des', sys_args[DESTINATION_PATH])
-        validate_path_existing(dir_path=sys_args[DESTINATION_PATH])
-        sys_args[DESTINATION_PATH] = validate_path_to_dir(dir_path=sys_args[DESTINATION_PATH])
-    validate_playlist_existing(playlist_url=sys_args[PLAYLIST_URL])
-    validate_playlist_loaded(sys_args=sys_args)
+        validate_path_existing(dir_path=args[DESTINATION_PATH])
+        args[DESTINATION_PATH] = validate_path_to_dir(dir_path=args[DESTINATION_PATH])
+    validate_playlist_existing(playlist_url=args[PLAYLIST_URL])
+    validate_playlist_loaded(args=args)
     return True
