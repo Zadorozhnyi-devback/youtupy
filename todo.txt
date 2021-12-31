@@ -1,3 +1,6 @@
 tests
 
-UI: celery
+UI: celery tasks
+    additional actions add to ui
+
+architecture

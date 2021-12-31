@@ -1,9 +1,8 @@
 from tkinter import Tk, Label, Button, Entry
 # from tkinter.ttk import Progressbar, Style
 
-# from backend.handlers.data_handlers import get_playlist
+from multiprocessing import Process
 from backend.main import main
-# from backend.main import main
 from ui_tkinter.const import MY_LABEL
 
 
@@ -27,7 +26,10 @@ class YouTupy:
     def _main(self) -> None:
         args = [self.playlist_url.get(), self.destination_dir.get()]
         args = [arg for arg in args if arg]
-        main(args=args)
+        my_process = Process(target=main, args=(args,))
+        my_process.start()
+        # my_process.join()
+        # main(args=args)
         # print('args', args)
         # if self._validate_input(user_input=self.user_input):
         #     if validate_sys_args(sys_args=sys_args):
@@ -47,7 +49,6 @@ class YouTupy:
         # print('validate', self._validate_input())
         if self._validate_input():
             self.label.configure(text=f'getting playlist...')
-            print('AND')
             self._main()
             self.label.configure(text=f'done')
         self._get_access_button()
