@@ -1,6 +1,7 @@
 tests
 
-UI: celery tasks
+UI: multiprocessing
     additional actions add to ui
+    кнопку дизейблить во время выполнения таски
 
 architecture

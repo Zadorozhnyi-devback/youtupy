@@ -20,18 +20,27 @@ def get_dir_path(playlist_title: str, path_to_playlists: str) -> str:
 
 def download_playlist_videos(playlist, output_path: str) -> None:
     for video in playlist.videos:
-        video.streams.filter(only_audio=True).get_audio_only().download(output_path=output_path)
+        video.streams.filter(
+            only_audio=True
+        ).get_audio_only().download(
+            output_path=output_path
+        )
 
 
 def get_dir_mp4_files(dir_path: str) -> List[str]:
-    videos = [file for file in os.listdir(path=dir_path) if file.endswith('.mp4')]
+    videos = [
+        file for file in os.listdir(path=dir_path) if file.endswith('.mp4')
+    ]
     return videos
 
 
 def convert_mp4_to_mp3(dir_videos: List[str], dir_path: str) -> None:
     for video in dir_videos:
         subprocess.call(
-            ['ffmpeg', '-i', f"{dir_path}/{video}", f"{dir_path}/{video.split('.mp4')[VIDEO_NAME]}.mp3"]
+            [
+                'ffmpeg', '-i', f'{dir_path}/{video}',
+                f"{dir_path}/{video.split('.mp4')[VIDEO_NAME]}.mp3"
+            ]
         )
 
 
