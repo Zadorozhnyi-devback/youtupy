@@ -74,17 +74,6 @@ def validate_path_to_dir(dir_path: str) -> str:
     return dir_path
 
 
-def validate_video_downloading(
-    playlist: Playlist, output_path: str
-) -> bool:
-    for digit in range(3):
-        try:
-            download_playlist_videos(
-                playlist=playlist, output_path=output_path
-            )
-            return True
-        except URLError:
-            continue
     # raise URLError(
     #     '''
     # Something went wrong. Got playlist but got error during downloading video

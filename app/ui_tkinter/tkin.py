@@ -2,15 +2,13 @@ from multiprocessing import Process
 from tkinter import Tk, Label, Button, Entry
 # from tkinter.ttk import Progressbar, Style
 
-from pytube import Playlist
 
 from backend.const import PLAYLIST_URL, DESTINATION_PATH
 from backend.handlers.data_handlers import (
-    get_playlist, get_dir_path, get_dir_mp4_files, convert_mp4_to_mp3,
-    remove_videos
+    get_playlist, get_dir_path, download_videos
 )
 from backend.validators import (
-    validate_video_downloading, validate_path_existing, validate_path_to_dir,
+    validate_path_existing, validate_path_to_dir,
     validate_playlist_existing, validate_playlist_loaded
 )
 from ui_tkinter.const import (
@@ -19,21 +17,11 @@ from ui_tkinter.const import (
 )
 
 
-def download_videos(playlist: Playlist, dir_path: str) -> None:
-    download_complete = validate_video_downloading(
-        playlist=playlist, output_path=dir_path
-    )
-    if download_complete:
-        dir_videos = get_dir_mp4_files(dir_path=dir_path)
-        convert_mp4_to_mp3(dir_videos=dir_videos, dir_path=dir_path)
-        remove_videos(dir_videos=dir_videos, dir_path=dir_path)
-
-
 class YouTupy:
     def __init__(self) -> None:
         self.window = self._get_window()
         self.label = self._get_label()
-        self.access_button = self._get_access_button()
+        self.download_button = self._get_download_button()
         self.playlist_url = self._get_input_playlist_url()
         self.destination_dir = self._get_input_destination_dir()
         # style = Style()
@@ -51,13 +39,13 @@ class YouTupy:
         self.window.after(1000, self._check_if_done, my_process)
 
     def _check_if_done(self, my_process: Process) -> None:
-        # Если поток закончился, сбросим кнопку и выведем сообщение.
+        # If thread is done display message and activate button
         if not my_process.is_alive():
             self.label.configure(text='done!')
-            # Сброс кнопки.
-            self.access_button['state'] = 'normal'
+            # Reset button
+            self.download_button['state'] = 'normal'
         else:
-            # Если нет, проверим еще раз через некоторое время.
+            # If not, gonna check after 1 sec
             self._schedule_check(my_process)
 
     def _validate_args(self) -> bool:
@@ -92,13 +80,12 @@ class YouTupy:
                 target=download_videos, args=(self.playlist, dir_path)
             )
             my_process.start()
-            self.access_button['state'] = 'disabled'
             self._schedule_check(my_process=my_process)
 
     def _clicked_run_youtupy(self) -> None:
         self.label.configure(text=f'loading playlist...')
+        self.download_button['state'] = 'disabled'
         self._main_process()
-        self._get_access_button()
 
     @staticmethod
     def _get_window() -> Tk:
@@ -107,7 +94,7 @@ class YouTupy:
         window.geometry(WINDOW_SIZE)
         return window
 
-    def _get_access_button(self) -> Button:
+    def _get_download_button(self) -> Button:
         button = Button(
             master=self.window, text='press me!', width='15',
             fg='red', command=self._clicked_run_youtupy

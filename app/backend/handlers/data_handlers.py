@@ -1,6 +1,7 @@
 import os
 import subprocess
 from typing import List
+from urllib.error import URLError
 
 from pytube import Playlist
 
@@ -47,3 +48,26 @@ def convert_mp4_to_mp3(dir_videos: List[str], dir_path: str) -> None:
 def remove_videos(dir_videos: List[str], dir_path: str) -> None:
     for video in dir_videos:
         os.remove(f'{dir_path}/{video}')
+
+
+def try_download_video(
+    playlist: Playlist, output_path: str
+) -> bool:
+    for digit in range(3):
+        try:
+            download_playlist_videos(
+                playlist=playlist, output_path=output_path
+            )
+            return True
+        except URLError:
+            continue
+
+
+def download_videos(playlist: Playlist, dir_path: str) -> None:
+    download_complete = try_download_video(
+        playlist=playlist, output_path=dir_path
+    )
+    if download_complete:
+        dir_videos = get_dir_mp4_files(dir_path=dir_path)
+        convert_mp4_to_mp3(dir_videos=dir_videos, dir_path=dir_path)
+        remove_videos(dir_videos=dir_videos, dir_path=dir_path)
