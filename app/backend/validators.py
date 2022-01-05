@@ -1,10 +1,8 @@
 import os
 from typing import List
-from urllib.error import URLError
 
 from pytube import Playlist
 
-from backend.handlers.data_handlers import download_playlist_videos
 from backend.handlers.validation_handlers import make_dirs, remove_old_dirs
 from backend.const import DESTINATION_PATH, PLAYLIST_URL, DEFAULT_DIR_PATH
 
@@ -26,11 +24,6 @@ def validate_playlist_existing(playlist_url) -> bool:
     if not playlist.videos:
         return False
     return True
-    # raise ValueError(
-    #     '''
-    # Something went wrong. There is empty playlist, check the url
-    #         '''
-    #     )
 
 
 # def validate_user_answer(dir_path: str):
@@ -59,13 +52,6 @@ def validate_playlist_loaded(args: List[str]) -> bool:
     if playlist.title in dirs:
         return False
     return True
-        # print(
-        #     '''
-    # This playlist folder name already exists
-    #
-    # Leave empty and press 'enter' or pass 0 to rebuild or pass 1 to exit Youtupy
-# '''
-#         )
 #         validate_user_answer(dir_path=dir_path)
 
 

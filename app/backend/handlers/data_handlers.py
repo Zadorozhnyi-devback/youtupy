@@ -53,7 +53,7 @@ def remove_videos(dir_videos: List[str], dir_path: str) -> None:
 def try_download_video(
     playlist: Playlist, output_path: str
 ) -> bool:
-    for digit in range(3):
+    for _ in range(3):
         try:
             download_playlist_videos(
                 playlist=playlist, output_path=output_path

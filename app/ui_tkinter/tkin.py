@@ -1,7 +1,7 @@
 from multiprocessing import Process
-from tkinter import Tk, Label, Button, Entry
+from tkinter import Tk, Label, Button, Entry, ttk, Frame
 # from tkinter.ttk import Progressbar, Style
-
+from typing import List
 
 from backend.const import PLAYLIST_URL, DESTINATION_PATH
 from backend.handlers.data_handlers import (
@@ -15,6 +15,7 @@ from ui_tkinter.const import (
     MY_LABEL, DIR_EXISTS, EMPTY_PLAYLIST, MY_FONT,
     YOUTUBE_MUSIC, NEED_YOUTUBE_MUSIC, WINDOW_SIZE, WINDOW_TITLE
 )
+from ui_tkinter.handlers import _progressbar_process
 
 
 class YouTupy:
@@ -22,8 +23,8 @@ class YouTupy:
         self.window = self._get_window()
         self.label = self._get_label()
         self.download_button = self._get_download_button()
-        self.playlist_url = self._get_input_playlist_url()
-        self.destination_dir = self._get_input_destination_dir()
+        self.playlist_url = self._get_playlist_url()
+        self.destination_dir = self._get_destination_dir()
         # style = Style()
         # style.theme_use('default')
         # style.configure("black.Horizontal.TProgressbar", background='black')
@@ -34,19 +35,72 @@ class YouTupy:
         # bar.grid(column=0, row=0)
         self.window.mainloop()
 
-    def _schedule_check(self, my_process: Process) -> None:
-        """Planning to call 'check_if_done()' during one second"""
-        self.window.after(1000, self._check_if_done, my_process)
+    def _run_progressbar(self):
+        playlist_length = self.playlist.length
+        self.progressbar['value'] = 0
+        ms = playlist_length * 15 // 20 * 1000
+        process = Process(
+            target=_progressbar_process, args=(playlist_length,)
+        )
+        process.start()
+        self._update_progressbar(ms, process)
 
-    def _check_if_done(self, my_process: Process) -> None:
+    def _update_progressbar(
+        self, ms: int, process: Process,
+        func_name: str = '_update_progressbar'
+    ) -> None:
+        if self.progressbar['value'] == 100:
+            process.terminate()
+            self.label.configure(text='almost done...')
+            return
+        self.progressbar['value'] += 5
+        func = self._check_process_done
+        self.window.after(ms, func, ms, process, func_name)
+
+    def _create_progressbar(self) -> None:
+        progress_frame = Frame(self.window)
+        progress_frame.grid(
+            column=4, row=0, columnspan=2, padx=10, pady=20
+        )
+        self.progressbar = ttk.Progressbar(
+            master=progress_frame, mode="determinate", orient='horizontal',
+            length=200
+        )
+        self.progressbar.grid(
+            column=4, row=0, columnspan=2, padx=10, pady=20
+        )
+        blank = Frame(progress_frame)
+        blank.grid(
+            column=4, row=0, columnspan=2, padx=10, pady=20, sticky='nsew'
+        )
+
+    def _schedule_check(
+        self, ms: int, process: Process, func_name: str = '_schedule_check'
+    ) -> None:
+        """
+        Planning to call
+            '_check_process_done()'
+            or some func
+            during 'ms' // 1000 seconds
+        """
+        func = self._check_process_done
+        self.window.after(ms, func, ms, process, func_name)
+
+    def _check_process_done(
+            self, ms: int, process: Process, func_name: str
+    ) -> None:
         # If thread is done display message and activate button
-        if not my_process.is_alive():
+        if not process.is_alive():
             self.label.configure(text='done!')
             # Reset button
             self.download_button['state'] = 'normal'
+            # Hide bar
+            self.progressbar.lower()
         else:
-            # If not, gonna check after 1 sec
-            self._schedule_check(my_process)
+            # If not, gonna check after ms * 1000 sec
+            getattr(self, func_name)(
+                ms=ms, process=process, func_name=func_name
+            )
 
     def _validate_args(self) -> bool:
         if not self.playlist_url.get().startswith(YOUTUBE_MUSIC):
@@ -65,22 +119,32 @@ class YouTupy:
         else:
             self.label.configure(text=EMPTY_PLAYLIST)
 
+    def _get_args(self) -> List[str]:
+        args = [self.playlist_url.get(), self.destination_dir.get()]
+        args = [arg for arg in args if arg]
+        return args
+
     def _main_process(self) -> None:
-        self.args = [self.playlist_url.get(), self.destination_dir.get()]
-        self.args = [arg for arg in self.args if arg]
-        if self._validate_args():
-            self.playlist = get_playlist(playlist_url=self.args[PLAYLIST_URL])
+        self.args = self._get_args()
+        self.playlist = get_playlist(playlist_url=self.args[PLAYLIST_URL])
+        if not self._validate_args():
+            self.download_button['state'] = 'normal'
+        else:
             dir_path = get_dir_path(
                 playlist_title=self.playlist.title,
                 path_to_playlists=(
                     self.args[DESTINATION_PATH] if len(self.args) > 1 else None
                 )
             )
-            my_process = Process(
+            self._create_progressbar()
+            main_process = Process(
                 target=download_videos, args=(self.playlist, dir_path)
             )
-            my_process.start()
-            self._schedule_check(my_process=my_process)
+            main_process.start()
+
+            self.progressbar.tkraise()
+            self._run_progressbar()
+            self._schedule_check(ms=1000, process=main_process)
 
     def _clicked_run_youtupy(self) -> None:
         self.label.configure(text=f'loading playlist...')
@@ -112,13 +176,13 @@ class YouTupy:
         # label.pack()
         return label
 
-    def _get_input_playlist_url(self) -> Entry:
+    def _get_playlist_url(self) -> Entry:
         playlist_url = Entry(master=self.window, width=25)
         playlist_url.grid(column=5, row=2)
         playlist_url.focus()
         return playlist_url
 
-    def _get_input_destination_dir(self) -> Entry:
+    def _get_destination_dir(self) -> Entry:
         input_dir = Entry(master=self.window, width=25)
         input_dir.grid(column=5, row=4)
         return input_dir
