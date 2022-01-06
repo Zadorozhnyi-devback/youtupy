@@ -3,19 +3,20 @@ from typing import List
 
 from pytube import Playlist
 
-from backend.handlers.validation_handlers import make_dirs, remove_old_dirs
-from backend.const import DESTINATION_PATH, PLAYLIST_URL, DEFAULT_DIR_PATH
+from backend.handlers.for_validation import make_dirs, remove_old_dirs
+from backend.const import PLAYLIST_PATH, PLAYLIST_URL, DEFAULT_PLAYLIST_PATH
 
 
-def validate_path_existing(dir_path: str) -> None:
+def validate_path_existing(playlist_path: str) -> None:
     try:
-        os.chdir(dir_path)
-        os.listdir(dir_path)
+        if playlist_path != DEFAULT_PLAYLIST_PATH:
+            os.chdir(playlist_path)
+        os.listdir(playlist_path)
     except FileNotFoundError:
-        make_dirs(dir_path=dir_path)
+        make_dirs(playlist_path=playlist_path)
     except NotADirectoryError:
-        remove_old_dirs(dir_path=dir_path)
-        make_dirs(dir_path=dir_path)
+        remove_old_dirs(playlist_path=playlist_path)
+        make_dirs(playlist_path=playlist_path)
 
 
 def validate_playlist_existing(playlist_url) -> bool:
@@ -25,14 +26,14 @@ def validate_playlist_existing(playlist_url) -> bool:
     return True
 
 
-# def validate_user_answer(dir_path: str):
+# def validate_user_answer(playlist_path: str):
 #     while True:
 #         user_answer = input('Decision: ')
 #         # print(user_answer == 0)
 #         if is_integer(value=user_answer) or not user_answer:
 #             if not user_answer or int(user_answer) == 0:
-#                 remove_old_dirs(dir_path=dir_path)
-#                 make_dirs(dir_path=dir_path)
+#                 remove_old_dirs(playlist_path=playlist_path)
+#                 make_dirs(playlist_path=playlist_path)
 #                 break
 #             if int(user_answer) == 1:
 #                 sys.exit('See you next time :P')
@@ -40,25 +41,32 @@ def validate_playlist_existing(playlist_url) -> bool:
 #         print("Don't understand you")
 
 
+def get_listdir(playlist_path: str) -> List[str]:
+    if playlist_path != DEFAULT_PLAYLIST_PATH:
+        os.chdir(playlist_path)
+    dirs = os.listdir(path=playlist_path)
+    return dirs
+
+
 def validate_playlist_loaded(args: List[str]) -> bool:
     playlist = Playlist(url=args[PLAYLIST_URL])
-    dir_path = args[DESTINATION_PATH] if len(args) > 1 else DEFAULT_DIR_PATH
+    playlist_path = (
+        args[PLAYLIST_PATH] if len(args) > 1 else DEFAULT_PLAYLIST_PATH
+    )
     try:
-        os.chdir(dir_path)
-        dirs = os.listdir(path=dir_path)
+        dirs = get_listdir(playlist_path=playlist_path)
     except FileNotFoundError:
-        make_dirs(dir_path=dir_path)
-        os.chdir(dir_path)
-        dirs = os.listdir(path=dir_path)
+        make_dirs(playlist_path=playlist_path)
+        dirs = get_listdir(playlist_path=playlist_path)
     if playlist.title in dirs:
         return False
     return True
-#         validate_user_answer(dir_path=dir_path)
+#         validate_user_answer(playlist_path=playlist_path)
 
 
-# def validate_path_to_dir(dir_path: str) -> str:
-#     dir_path = dir_path[1:] if dir_path.startswith('~') else dir_path
-#     return dir_path
+# def validate_path_to_dir(playlist_path: str) -> str:
+#     playlist_path = playlist_path[1:] if playlist_path.startswith('~') else playlist_path
+#     return playlist_path
 
 
     # raise URLError(

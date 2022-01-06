@@ -1,9 +1,13 @@
-MY_LABEL = '''
-Welcome to youtupy!
+WELCOME_TO_YOUTUPY = '''
+welcome to youtupy!
 '''
 WINDOW_TITLE = 'youtupy'
 WINDOW_SIZE = '800x600'
 MY_FONT = 'Arial Bold'
+
+AVERAGE_TIME_FOR_VIDEO = 15
+STEPS_AMOUNT = 20
+CURR_PATH = 'current folder: '
 
 YOUTUBE_MUSIC = 'https://music.youtube.com/'
 NEED_YOUTUBE_MUSIC = f"link should starts with '{YOUTUBE_MUSIC}'"
