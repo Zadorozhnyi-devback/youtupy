@@ -9,6 +9,7 @@ from backend.const import DESTINATION_PATH, PLAYLIST_URL, DEFAULT_DIR_PATH
 
 def validate_path_existing(dir_path: str) -> None:
     try:
+        os.chdir(dir_path)
         os.listdir(dir_path)
     except FileNotFoundError:
         make_dirs(dir_path=dir_path)
@@ -18,9 +19,7 @@ def validate_path_existing(dir_path: str) -> None:
 
 
 def validate_playlist_existing(playlist_url) -> bool:
-    print('url', playlist_url)
     playlist = Playlist(url=playlist_url)
-    print('salal', playlist)
     if not playlist.videos:
         return False
     return True
@@ -45,9 +44,11 @@ def validate_playlist_loaded(args: List[str]) -> bool:
     playlist = Playlist(url=args[PLAYLIST_URL])
     dir_path = args[DESTINATION_PATH] if len(args) > 1 else DEFAULT_DIR_PATH
     try:
+        os.chdir(dir_path)
         dirs = os.listdir(path=dir_path)
     except FileNotFoundError:
         make_dirs(dir_path=dir_path)
+        os.chdir(dir_path)
         dirs = os.listdir(path=dir_path)
     if playlist.title in dirs:
         return False
@@ -55,9 +56,9 @@ def validate_playlist_loaded(args: List[str]) -> bool:
 #         validate_user_answer(dir_path=dir_path)
 
 
-def validate_path_to_dir(dir_path: str) -> str:
-    dir_path = dir_path[1:] if dir_path.startswith('/') else dir_path
-    return dir_path
+# def validate_path_to_dir(dir_path: str) -> str:
+#     dir_path = dir_path[1:] if dir_path.startswith('~') else dir_path
+#     return dir_path
 
 
     # raise URLError(

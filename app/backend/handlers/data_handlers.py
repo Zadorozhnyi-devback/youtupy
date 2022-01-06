@@ -1,5 +1,5 @@
-import os
 import subprocess
+from pathlib import Path
 from typing import List
 from urllib.error import URLError
 
@@ -19,6 +19,27 @@ def get_dir_path(playlist_title: str, path_to_playlists: str) -> str:
     return path
 
 
+def get_dir_mp4_files(dir_path: str) -> List[Path]:
+    videos = [file for file in Path(dir_path).glob('**/*.mp4')]
+    return videos
+
+
+def convert_mp4_to_mp3(dir_videos: List[Path], dir_path: str) -> None:
+    for video in dir_videos:
+        subprocess.call(
+            [
+                'ffmpeg', '-i', video,
+                f"{dir_path}/{video.name.split('.mp4')[VIDEO_NAME]}.mp3"
+            ]
+        )
+
+
+def remove_videos(dir_videos: List[Path], dir_path: str) -> None:
+    for video in dir_videos:
+        video_path = Path() / dir_path / video.name
+        video_path.unlink()
+
+
 def download_playlist_videos(playlist, output_path: str) -> None:
     for video in playlist.videos:
         video.streams.filter(
@@ -28,31 +49,7 @@ def download_playlist_videos(playlist, output_path: str) -> None:
         )
 
 
-def get_dir_mp4_files(dir_path: str) -> List[str]:
-    videos = [
-        file for file in os.listdir(path=dir_path) if file.endswith('.mp4')
-    ]
-    return videos
-
-
-def convert_mp4_to_mp3(dir_videos: List[str], dir_path: str) -> None:
-    for video in dir_videos:
-        subprocess.call(
-            [
-                'ffmpeg', '-i', f'{dir_path}/{video}',
-                f"{dir_path}/{video.split('.mp4')[VIDEO_NAME]}.mp3"
-            ]
-        )
-
-
-def remove_videos(dir_videos: List[str], dir_path: str) -> None:
-    for video in dir_videos:
-        os.remove(f'{dir_path}/{video}')
-
-
-def try_download_video(
-    playlist: Playlist, output_path: str
-) -> bool:
+def try_download_video(playlist: Playlist, output_path: str) -> bool:
     for _ in range(3):
         try:
             download_playlist_videos(

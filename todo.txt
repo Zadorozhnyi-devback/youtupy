@@ -1,9 +1,19 @@
 tests
 
-UI: multiprocessing
+UI:
     additional actions add to ui
-    working on progressbar !
-    destination input
+
+    destination input (попробовать через subprocess перейти в домашнюю)
+    destination tree +
+        папку поменять на пользовательскую
+        показывать выбранный путь
+
+    фон
+    иконка
+    всплавающее окно с выбором перезаписи папки или отменой
+    убрать задержку при запуске
+
+
 
 
 architecture

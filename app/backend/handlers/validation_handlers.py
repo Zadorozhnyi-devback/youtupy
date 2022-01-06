@@ -1,17 +1,16 @@
 import os
 import shutil
+from pathlib import Path
 
 from backend.const import FIRST
 
 
-def make_dirs(dir_path: str, new_dir_path: str = '') -> None:
+def make_dirs(dir_path: str) -> None:
     dirs = [my_dir for my_dir in dir_path.split('/') if my_dir]
-    for my_dir in dirs:
-        new_dir_path += f'{my_dir}/'
-        try:
-            os.mkdir(new_dir_path)
-        except FileExistsError:
-            continue
+    destination_path = '/'.join(dirs)
+    os.chdir(destination_path)
+    new_dir_path = Path(destination_path)
+    new_dir_path.mkdir(parents=True, exist_ok=True)
 
 
 def remove_old_dirs(dir_path: str) -> None:
