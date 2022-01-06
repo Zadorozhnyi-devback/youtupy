@@ -5,11 +5,15 @@ from pathlib import Path
 from backend.const import FIRST, DEFAULT_PLAYLIST_PATH
 
 
+def chdir_if_path_not_default(playlist_path: str) -> None:
+    if playlist_path != DEFAULT_PLAYLIST_PATH:
+        os.chdir(playlist_path)
+
+
 def make_dirs(playlist_path: str) -> None:
     path_dirs = [my_dir for my_dir in playlist_path.split('/') if my_dir]
     playlist_path = '/'.join(path_dirs)
-    if playlist_path != DEFAULT_PLAYLIST_PATH:
-        os.chdir(playlist_path)
+    chdir_if_path_not_default(playlist_path=playlist_path)
     playlist_path = Path(playlist_path)
     playlist_path.mkdir(parents=True, exist_ok=True)
 

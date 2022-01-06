@@ -3,14 +3,15 @@ from typing import List
 
 from pytube import Playlist
 
-from backend.handlers.for_validation import make_dirs, remove_old_dirs
+from backend.handlers.for_validation import (
+    make_dirs, remove_old_dirs, chdir_if_path_not_default
+)
 from backend.const import PLAYLIST_PATH, PLAYLIST_URL, DEFAULT_PLAYLIST_PATH
 
 
 def validate_path_existing(playlist_path: str) -> None:
     try:
-        if playlist_path != DEFAULT_PLAYLIST_PATH:
-            os.chdir(playlist_path)
+        chdir_if_path_not_default(playlist_path=playlist_path)
         os.listdir(playlist_path)
     except FileNotFoundError:
         make_dirs(playlist_path=playlist_path)
@@ -42,8 +43,7 @@ def validate_playlist_existing(playlist_url) -> bool:
 
 
 def get_listdir(playlist_path: str) -> List[str]:
-    if playlist_path != DEFAULT_PLAYLIST_PATH:
-        os.chdir(playlist_path)
+    chdir_if_path_not_default(playlist_path=playlist_path)
     dirs = os.listdir(path=playlist_path)
     return dirs
 
@@ -62,15 +62,3 @@ def validate_playlist_loaded(args: List[str]) -> bool:
         return False
     return True
 #         validate_user_answer(playlist_path=playlist_path)
-
-
-# def validate_path_to_dir(playlist_path: str) -> str:
-#     playlist_path = playlist_path[1:] if playlist_path.startswith('~') else playlist_path
-#     return playlist_path
-
-
-    # raise URLError(
-    #     '''
-    # Something went wrong. Got playlist but got error during downloading video
-# '''
-#     )
