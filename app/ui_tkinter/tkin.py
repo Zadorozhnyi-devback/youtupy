@@ -1,6 +1,9 @@
 import getpass
+import os
 from multiprocessing import Process
-from tkinter import Tk, Label, Button, Entry, Frame, filedialog, messagebox
+from tkinter import (
+    Tk, Label, Button, Entry, Frame, filedialog, messagebox, PhotoImage
+)
 from tkinter.ttk import Style, Progressbar
 from typing import List
 
@@ -187,6 +190,8 @@ class YouTupy:
     @staticmethod
     def _get_window() -> Tk:
         window = Tk()
+        my_path = f'{os.getcwd()}/static/jordan.png'
+        window.iconphoto(True, PhotoImage(file=my_path))
         window.title(WINDOW_TITLE)
         window.geometry(WINDOW_SIZE)
         return window
