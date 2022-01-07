@@ -1,3 +1,4 @@
+import getpass
 from multiprocessing import Process
 from tkinter import Tk, Label, Button, Entry, Frame, filedialog, messagebox
 from tkinter.ttk import Style, Progressbar
@@ -45,7 +46,10 @@ class YouTupy:
             return True
 
     def _clicked_choose_dir(self):
-        self._window.directory = filedialog.askdirectory()
+        self._window.directory = filedialog.askdirectory(
+            # gonna work on mac, have to check for windows and linux
+            initialdir=f'/Users/{getpass.getuser()}/'
+        )
         if self._window.directory:
             self._playlist_dir = self._window.directory
         self._curr_path_label.configure(
