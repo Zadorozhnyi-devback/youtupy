@@ -22,6 +22,7 @@ def validate_path_existing(playlist_path: str) -> None:
 
 def validate_playlist_existing(playlist_url) -> bool:
     playlist = Playlist(url=playlist_url)
+    # проверить, есть ли вообще плейлист
     if not playlist.videos:
         return False
     return True
