@@ -1,13 +1,13 @@
 import getpass
 import os
 from multiprocessing import Process
+from time import sleep
 from tkinter import (
     Tk, Label, Button, Entry, Frame, filedialog, messagebox, PhotoImage
 )
 from tkinter.ttk import Style, Progressbar
-from typing import List
 
-from backend.const import PLAYLIST_URL, PLAYLIST_PATH, DEFAULT_PLAYLIST_PATH
+from backend.const import DEFAULT_PLAYLIST_PATH
 from backend.handlers.for_data import (
     get_playlist, get_path_to_playlist, download_videos
 )
@@ -29,7 +29,7 @@ class YouTupy:
         self._main_label = self._get_main_label()
         self._download_button = self._get_download_button()
         self._playlist_url = self._get_playlist_url()
-        self._playlist_dir = DEFAULT_PLAYLIST_PATH
+        self._playlist_path = DEFAULT_PLAYLIST_PATH
         self._destination_button = self._get_destination_button()
 
         self._empty_string = Label(master=self._window, text='')
@@ -39,11 +39,11 @@ class YouTupy:
 
     def _playlist_exists_msg_box(self) -> bool:
         answer = messagebox.askyesno(
-            title="playlist exists!",
-            message="override playlist?")
+            title='playlist exists!',
+            message='override playlist?')
         if answer:
             remove_playlist_dir(
-                playlist_path=self._args[PLAYLIST_PATH],
+                playlist_path=self._playlist_path,
                 playlist_title=self._playlist.title
             )
             return True
@@ -54,16 +54,16 @@ class YouTupy:
             initialdir=f'/Users/{getpass.getuser()}/'
         )
         if self._window.directory:
-            self._playlist_dir = self._window.directory
+            self._playlist_path = self._window.directory
         self._curr_path_label.configure(
-            text=f'{CURR_PATH}{self._playlist_dir}'
+            text=f'{CURR_PATH}{self._playlist_path}'
         )
 
     def _get_curr_path_label(self) -> None:
         self._curr_path_label = Label(
             master=self._window,
             font=(MY_FONT, 14),
-            text=f'{CURR_PATH}{self._playlist_dir}'
+            text=f'{CURR_PATH}{self._playlist_path}'
         )
         self._curr_path_label.grid(
             column=0, row=4, sticky='W', columnspan=100
@@ -79,31 +79,36 @@ class YouTupy:
         self._get_curr_path_label()
         return button
 
-    def _update_progressbar(self, ms: int) -> None:
-        if self._progressbar['value'] == 95:
-            self._main_label.configure(text='almost done...')
-            return
+    def _increment_progressbar(self) -> None:
         self._progressbar['value'] += 5
-        func = self._update_progressbar
-        self._window.after(ms, func, ms)
+        self._window.update()
 
-    def _run_progressbar(self) -> None:
-        playlist_length = self._playlist.length
+    def _update_progressbar(self, ms: int, main_process: Process) -> None:
+        if main_process.is_alive():
+            self._increment_progressbar()
+            func = self._update_progressbar
+            if self._progressbar['value'] == 95:
+                self._main_label.configure(text='almost done...')
+                return
+            self._window.after(ms, func, ms, main_process)
+
+    def _run_progressbar(self, main_process: Process) -> None:
         self._progressbar['value'] = 0
+        playlist_length = self._playlist.length
         # math to get progressbar step time in ms
         ms = playlist_length * AVERAGE_TIME_FOR_VIDEO // STEPS_AMOUNT * 1000
-        self._update_progressbar(ms)
+        self._update_progressbar(ms=ms, main_process=main_process)
 
     def _create_progressbar(self) -> None:
         style = Style()
         style.theme_use('default')
-        style.configure("black.Horizontal.TProgressbar", background='black')
+        style.configure('black.Horizontal.TProgressbar', background='black')
         progress_frame = Frame(self._window)
         progress_frame.grid(
             column=0, row=0, padx=10, pady=20
         )
         self._progressbar = Progressbar(
-            master=progress_frame, mode="determinate", orient='horizontal',
+            master=progress_frame, mode='determinate', orient='horizontal',
             length=200, style='black.Horizontal.TProgressbar'
         )
         self._progressbar.grid(
@@ -124,10 +129,15 @@ class YouTupy:
         self._window.after(ms, func, ms, process, func_name)
 
     def _check_process_done(
-            self, ms: int, process: Process, func_name: str
+        self, ms: int, process: Process, func_name: str
     ) -> None:
         # If thread is done display message and activate button
         if not process.is_alive():
+            # костыль для добивания прогрессбара
+            while self._progressbar['value'] < 100:
+                self._increment_progressbar()
+                sleep(0.2)
+
             self._main_label.configure(text='done!')
             # Reset button
             self._download_button['state'] = 'normal'
@@ -140,10 +150,11 @@ class YouTupy:
             )
 
     def _validate_args(self) -> bool:
-        if len(self._args) > 1:
-            validate_path_existing(playlist_path=self._args[PLAYLIST_PATH])
-        if validate_playlist_existing(playlist_url=self._args[PLAYLIST_URL]):
-            if validate_playlist_loaded(args=self._args):
+        validate_path_existing(playlist_path=self._playlist_path)
+        if validate_playlist_existing(playlist_url=self._playlist_url.get()):
+            if validate_playlist_loaded(
+                    [self._playlist_url.get(), self._playlist_path]
+            ):
                 return True
             else:
                 if self._playlist_exists_msg_box():
@@ -154,23 +165,16 @@ class YouTupy:
         else:
             self._main_label.configure(text=EMPTY_PLAYLIST)
 
-    def _get_args(self) -> List[str]:
-        args = [self._playlist_url.get(), self._playlist_dir]
-        args = [arg for arg in args if arg]
-        return args
-
     def _main_process(self) -> None:
-        self._args = self._get_args()
-        self._playlist = get_playlist(playlist_url=self._args[PLAYLIST_URL])
-        if not self._validate_args():
-            self._download_button['state'] = 'normal'
-        else:
+        self._playlist = get_playlist(playlist_url=self._playlist_url.get())
+        if self._validate_args():
+            self._main_label.configure(text=f'loading playlist...')
+            self._download_button['state'] = 'disabled'
+            # if not self._playlist_path:
+            #     self._playlist_path = DEFAULT_PLAYLIST_PATH
             path_to_playlist = get_path_to_playlist(
                 playlist_title=self._playlist.title,
-                playlist_path=(
-                    self._args[PLAYLIST_PATH]
-                    if len(self._args) > 1 else DEFAULT_PLAYLIST_PATH
-                )
+                playlist_path=self._playlist_path
             )
             self._create_progressbar()
             main_process = Process(
@@ -179,12 +183,10 @@ class YouTupy:
             main_process.start()
 
             self._progressbar.tkraise()
-            self._run_progressbar()
+            self._run_progressbar(main_process=main_process)
             self._schedule_check(ms=1000, process=main_process)
 
     def _clicked_run_youtupy(self) -> None:
-        self._main_label.configure(text=f'loading playlist...')
-        self._download_button['state'] = 'disabled'
         self._main_process()
 
     @staticmethod

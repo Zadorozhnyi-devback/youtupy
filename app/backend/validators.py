@@ -47,5 +47,4 @@ def validate_playlist_loaded(args: List[str]) -> bool:
             return False
     except FileNotFoundError:
         make_dirs(playlist_path=playlist_path)
-
     return True
