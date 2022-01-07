@@ -7,14 +7,14 @@ from backend.const import PLAYLIST_URL, PLAYLIST_PATH, DEFAULT_PLAYLIST_PATH
 from backend.handlers.for_data import (
     get_playlist, get_path_to_playlist, download_videos
 )
-from backend.handlers.for_validation import remove_playlist
+from backend.handlers.for_validation import remove_playlist_dir
 from backend.validators import (
     validate_path_existing, validate_playlist_loaded,
     validate_playlist_existing
 )
 from ui_tkinter.const import (
     WELCOME_TO_YOUTUPY, EMPTY_PLAYLIST, MY_FONT,
-    YOUTUBE_MUSIC, NEED_YOUTUBE_MUSIC, WINDOW_SIZE, WINDOW_TITLE,
+    WINDOW_SIZE, WINDOW_TITLE,
     STEPS_AMOUNT, AVERAGE_TIME_FOR_VIDEO, CURR_PATH
 )
 
@@ -34,15 +34,11 @@ class YouTupy:
         self._window.mainloop()
 
     def _playlist_exists_msg_box(self) -> bool:
-        # self._main_label.configure(
-        #     text=f'{self._playlist.title}{DIR_EXISTS}'
-        # )
         answer = messagebox.askyesno(
             title="playlist exists!",
             message="override playlist?")
         if answer:
-            # remove_old_dirs(playlist_path=self._args[PLAYLIST_PATH])
-            remove_playlist(
+            remove_playlist_dir(
                 playlist_path=self._args[PLAYLIST_PATH],
                 playlist_title=self._playlist.title
             )
@@ -137,16 +133,12 @@ class YouTupy:
             )
 
     def _validate_args(self) -> bool:
-        if not self._playlist_url.get().startswith(YOUTUBE_MUSIC):
-            self._main_label.configure(text=NEED_YOUTUBE_MUSIC)
-            return False
         if len(self._args) > 1:
             validate_path_existing(playlist_path=self._args[PLAYLIST_PATH])
         if validate_playlist_existing(playlist_url=self._args[PLAYLIST_URL]):
             if validate_playlist_loaded(args=self._args):
                 return True
             else:
-                # тут окно выпрыгвает с вопросом перезаписать или не
                 if self._playlist_exists_msg_box():
                     return True
                 else:
@@ -210,7 +202,6 @@ class YouTupy:
             text=WELCOME_TO_YOUTUPY
         )
         label.grid(column=6, row=0, columnspan=100)
-        # label.pack()
         return label
 
     def _get_playlist_url(self) -> Entry:

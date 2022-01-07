@@ -18,7 +18,7 @@ def make_dirs(playlist_path: str) -> None:
     playlist_path.mkdir(parents=True, exist_ok=True)
 
 
-def remove_playlist(playlist_path: str, playlist_title: str) -> None:
+def remove_playlist_dir(playlist_path: str, playlist_title: str) -> None:
     shutil.rmtree(path=f'{playlist_path}/{playlist_title}')
 
 

@@ -38,7 +38,9 @@ def remove_videos(dir_videos: List[Path]) -> None:
         video.unlink()
 
 
-def download_playlist_videos(playlist, path_to_playlist: str) -> None:
+def download_playlist_videos(
+        playlist: Playlist, path_to_playlist: str
+) -> None:
     for video in playlist.videos:
         video.streams.filter(
             only_audio=True
