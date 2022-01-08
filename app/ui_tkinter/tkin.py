@@ -19,10 +19,10 @@ from backend.validators import (
     validate_playlist_existing, validate_internet_connection
 )
 from ui_tkinter.const import (
-    MAIN_CANVAS_TEXT, EMPTY_PLAYLIST, MY_FONT,
-    WINDOW_SIZE, WINDOW_TITLE, MAIN_CANVAS_KWARGS,
-    STEPS_AMOUNT, AVERAGE_TIME_FOR_VIDEO, CURR_PATH, INPUT_CANVAS_KWARGS,
-    LIST_EXISTS_MSG_BOX_MSG, LIST_EXISTS_MSG_BOX_TITLE, NO_INTERNET
+    MAIN_CANVAS_TEXT, EMPTY_PLAYLIST, MY_FONT, STEPS_AMOUNT, CURR_PATH,
+    WINDOW_SIZE, WINDOW_TITLE, MAIN_CANVAS_KWARGS, INPUT_CANVAS_KWARGS,
+    LIST_EXISTS_MSG_BOX_MSG, LIST_EXISTS_MSG_BOX_TITLE, NO_INTERNET,
+    AVERAGE_DOWNLOAD_N_CONVERT_TIME, AVERAGE_DOWNLOAD_TIME
 )
 
 
@@ -120,7 +120,14 @@ class YouTupy:
         self._progressbar['value'] = 0
         playlist_length = self._playlist.length
         # math to get progressbar step time in ms
-        ms = playlist_length * AVERAGE_TIME_FOR_VIDEO // STEPS_AMOUNT * 1000
+        average_time_for_video = (
+            AVERAGE_DOWNLOAD_N_CONVERT_TIME
+            if self._selected_extension.get() == '.mp3'
+            else AVERAGE_DOWNLOAD_TIME
+        )
+        ms = int(
+            playlist_length * average_time_for_video / STEPS_AMOUNT * 1000
+        )
         self._update_progressbar(ms=ms, main_process=main_process)
 
     def _create_progressbar(self) -> None:
@@ -241,8 +248,7 @@ class YouTupy:
         )
         bbox = canvas.bbox(getattr(self, kw['text_id']))
         # size without padding on y bottom and long width
-        long = 200 if kw['font_size'] == 24 else 0
-        canvas.configure(height=bbox[3], width=bbox[2] + long)
+        canvas.configure(height=bbox[3], width=bbox[2] + kw['long'])
         return canvas
 
     def _get_playlist_url(self) -> Entry:

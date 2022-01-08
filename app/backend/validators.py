@@ -23,9 +23,7 @@ def validate_path_existing(playlist_path: str) -> None:
 
 def validate_internet_connection(playlist: Playlist) -> bool:
     try:
-        videos = getattr(playlist, 'videos')
-        print(videos)
-        print('TRue')
+        getattr(playlist, 'videos')
         return True
     except URLError:
         return False
