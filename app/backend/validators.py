@@ -1,5 +1,6 @@
 import os
 from typing import List
+from urllib.error import URLError
 
 from pytube import Playlist
 
@@ -20,8 +21,17 @@ def validate_path_existing(playlist_path: str) -> None:
         make_dirs(playlist_path=playlist_path)
 
 
-def validate_playlist_existing(playlist_url) -> bool:
-    playlist = Playlist(url=playlist_url)
+def validate_internet_connection(playlist: Playlist) -> bool:
+    try:
+        videos = getattr(playlist, 'videos')
+        print(videos)
+        print('TRue')
+        return True
+    except URLError:
+        return False
+
+
+def validate_playlist_existing(playlist: Playlist) -> bool:
     try:
         if not playlist.videos:
             return False

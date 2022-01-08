@@ -16,13 +16,13 @@ from backend.handlers.for_data import (
 from backend.handlers.for_validation import remove_playlist_dir
 from backend.validators import (
     validate_path_existing, validate_playlist_loaded,
-    validate_playlist_existing
+    validate_playlist_existing, validate_internet_connection
 )
 from ui_tkinter.const import (
     MAIN_CANVAS_TEXT, EMPTY_PLAYLIST, MY_FONT,
     WINDOW_SIZE, WINDOW_TITLE, MAIN_CANVAS_KWARGS,
     STEPS_AMOUNT, AVERAGE_TIME_FOR_VIDEO, CURR_PATH, INPUT_CANVAS_KWARGS,
-    LIST_EXISTS_MSG_BOX_MSG, LIST_EXISTS_MSG_BOX_TITLE
+    LIST_EXISTS_MSG_BOX_MSG, LIST_EXISTS_MSG_BOX_TITLE, NO_INTERNET
 )
 
 
@@ -34,6 +34,7 @@ class YouTupy:
         self._input_canvas = self._get_canvas(kw=INPUT_CANVAS_KWARGS)
         self._download_button = self._get_download_button()
         self._playlist_url = self._get_playlist_url()
+        self._playlist = get_playlist(playlist_url=self._playlist_url.get())
         self._playlist_path = DEFAULT_PLAYLIST_PATH
         self._destination_button = self._get_destination_button()
         self._create_empty_strings(rows=[7])
@@ -158,11 +159,13 @@ class YouTupy:
             self._download_button['state'] = 'normal'
 
     def _validate_args(self) -> bool:
-        playlist_url = self._playlist_url.get()
+        if not validate_internet_connection(playlist=self._playlist):
+            self._change_text_canvas(text=NO_INTERNET)
+            return False
         validate_path_existing(playlist_path=self._playlist_path)
-        if validate_playlist_existing(playlist_url=playlist_url):
+        if validate_playlist_existing(playlist=self._playlist):
             if validate_playlist_loaded(
-                    [playlist_url, self._playlist_path]
+                    [self._playlist_url.get(), self._playlist_path]
             ):
                 return True
             else:

@@ -4,6 +4,7 @@ MAIN_CANVAS_TEXT = 'welcome to youtupy!'
 INPUT_CANVAS_TEXT = 'paste your link:'
 LIST_EXISTS_MSG_BOX_MSG = 'override playlist?'
 LIST_EXISTS_MSG_BOX_TITLE = 'playlist exists!'
+NO_INTERNET = 'no Internet connection'
 
 # settings
 WINDOW_TITLE = 'youtupy'
