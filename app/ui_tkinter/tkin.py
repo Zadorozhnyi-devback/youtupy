@@ -170,13 +170,15 @@ class YouTupy:
             self._change_text_canvas(text=NO_INTERNET)
             return False
         validate_path_existing(playlist_path=self._playlist_path)
+        # подвисаем здесь
         if validate_playlist_existing(playlist=self._playlist):
             if validate_playlist_loaded(
                     [self._playlist_url.get(), self._playlist_path]
             ):
                 return True
             else:
-                if self._playlist_exists_msg_box():
+                answer = self._playlist_exists_msg_box()
+                if answer is True:
                     return True
                 else:
                     self._change_text_canvas(text=MAIN_CANVAS_TEXT)
