@@ -7,6 +7,7 @@ from tkinter import (
     StringVar, Canvas
 )
 from tkinter.ttk import Style, Progressbar, Radiobutton
+from typing import List, Dict, Union
 
 from backend.const import DEFAULT_PLAYLIST_PATH
 from backend.handlers.for_data import (
@@ -18,9 +19,10 @@ from backend.validators import (
     validate_playlist_existing
 )
 from ui_tkinter.const import (
-    WELCOME_TO_YOUTUPY, EMPTY_PLAYLIST, MY_FONT,
-    WINDOW_SIZE, WINDOW_TITLE,
-    STEPS_AMOUNT, AVERAGE_TIME_FOR_VIDEO, CURR_PATH
+    MAIN_CANVAS_TEXT, EMPTY_PLAYLIST, MY_FONT,
+    WINDOW_SIZE, WINDOW_TITLE, MAIN_CANVAS_KWARGS,
+    STEPS_AMOUNT, AVERAGE_TIME_FOR_VIDEO, CURR_PATH, INPUT_CANVAS_KWARGS,
+    LIST_EXISTS_MSG_BOX_MSG, LIST_EXISTS_MSG_BOX_TITLE
 )
 
 
@@ -28,21 +30,25 @@ class YouTupy:
     def __init__(self) -> None:
         self._window = self._get_window()
         self._create_extension_radiobuttons()
-        self._main_canvas = self._get_main_canvas()
+        self._main_canvas = self._get_canvas(kw=MAIN_CANVAS_KWARGS)
+        self._input_canvas = self._get_canvas(kw=INPUT_CANVAS_KWARGS)
         self._download_button = self._get_download_button()
         self._playlist_url = self._get_playlist_url()
         self._playlist_path = DEFAULT_PLAYLIST_PATH
         self._destination_button = self._get_destination_button()
-
-        self._empty_string = Label(master=self._window, text='')
-        self._empty_string.grid(column=0, row=3)
-
+        self._create_empty_strings(rows=[7])
         self._window.mainloop()
 
-    def _create_extension_radiobuttons(self):
+    def _create_empty_strings(self, rows: List[int]) -> None:
+        for row in rows:
+            empty_string = Label(master=self._window, text='')
+            empty_string.grid(column=0, row=row)
+
+    def _create_extension_radiobuttons(self) -> None:
         frame = Frame(master=self._window)
         frame.grid(column=0, row=6, sticky='W')
-        self._selected_extension = StringVar(master=None, value='.mp3')
+        # default
+        self._selected_extension = StringVar(master=None, value='.mp4')
         radiobutton_mp3 = Radiobutton(
             master=frame, text='mp3', value='.mp3',
             variable=self._selected_extension
@@ -56,8 +62,8 @@ class YouTupy:
 
     def _playlist_exists_msg_box(self) -> bool:
         answer = messagebox.askyesno(
-            title='playlist exists!',
-            message='override playlist?')
+            title=LIST_EXISTS_MSG_BOX_TITLE,
+            message=LIST_EXISTS_MSG_BOX_MSG)
         if answer:
             remove_playlist_dir(
                 playlist_path=self._playlist_path,
@@ -65,7 +71,7 @@ class YouTupy:
             )
             return True
 
-    def _clicked_choose_dir(self):
+    def _clicked_choose_dir(self) -> None:
         self._window.directory = filedialog.askdirectory(
             # gonna work on mac, have to check for windows and linux
             initialdir=f'/Users/{getpass.getuser()}/'
@@ -83,7 +89,7 @@ class YouTupy:
             text=f'{CURR_PATH}{self._playlist_path}'
         )
         self._curr_path_label.grid(
-            column=0, row=4, sticky='W', columnspan=100
+            column=0, row=10, sticky='W', columnspan=100
         )
 
     def _get_destination_button(self) -> Button:
@@ -91,7 +97,7 @@ class YouTupy:
             master=self._window, text='choose folder', width='12',
             fg='red', command=self._clicked_choose_dir
         )
-        button.grid(column=0, row=5, sticky='W')
+        button.grid(column=0, row=11, sticky='W')
 
         self._get_curr_path_label()
         return button
@@ -117,21 +123,13 @@ class YouTupy:
         self._update_progressbar(ms=ms, main_process=main_process)
 
     def _create_progressbar(self) -> None:
-        # progress_frame = Frame(self._window)
-        # progress_frame.grid(
-        #     column=0, row=0, padx=0, pady=10
-        # )
         self._progressbar = Progressbar(
-            master=self._window, mode='determinate', orient='horizontal',
-            length=250
+            master=self._window, mode='determinate',
+            orient='horizontal', length=265
         )
         self._progressbar.grid(
-            column=0, row=0, padx=0, pady=10
+            column=0, row=0
         )
-        # blank = Frame(progress_frame)
-        # blank.grid(
-        #     column=0, row=0, padx=0, pady=10, sticky='nsew'
-        # )
 
     def _schedule_check(
         self, ms: int, process: Process, func_name: str = '_schedule_check'
@@ -145,22 +143,19 @@ class YouTupy:
     def _check_process_done(
         self, ms: int, process: Process, func_name: str
     ) -> None:
-        # If thread is done display message and activate button
-        if not process.is_alive():
+        # If thread is done display message, activate button, finish pb
+        if process.is_alive():
+            getattr(self, func_name)(
+                ms=ms, process=process, func_name=func_name
+            )
+        else:
             # костыль для добивания прогрессбара
             while self._progressbar['value'] < 100:
                 self._increment_progressbar()
                 sleep(0.2)
             self._progressbar.destroy()
             self._change_text_canvas(text='done!')
-            # Reset button
             self._download_button['state'] = 'normal'
-            # Hide bar
-        else:
-            # If not, gonna check after ms * 1000 sec
-            getattr(self, func_name)(
-                ms=ms, process=process, func_name=func_name
-            )
 
     def _validate_args(self) -> bool:
         playlist_url = self._playlist_url.get()
@@ -174,7 +169,7 @@ class YouTupy:
                 if self._playlist_exists_msg_box():
                     return True
                 else:
-                    self._change_text_canvas(text=WELCOME_TO_YOUTUPY)
+                    self._change_text_canvas(text=MAIN_CANVAS_TEXT)
 
         else:
             self._change_text_canvas(text=EMPTY_PLAYLIST)
@@ -182,8 +177,8 @@ class YouTupy:
     def _main_process(self) -> None:
         self._playlist = get_playlist(playlist_url=self._playlist_url.get())
         if self._validate_args():
-            self._change_text_canvas(text='loading playlist...')
             self._download_button['state'] = 'disabled'
+            self._change_text_canvas(text='loading playlist...')
             path_to_playlist = get_path_to_playlist(
                 playlist_title=self._playlist.title,
                 playlist_path=self._playlist_path
@@ -210,8 +205,8 @@ class YouTupy:
         window = Tk()
         style = Style(master=window)
         style.theme_use('aqua')
-        my_path = f'{os.getcwd()}/static/jordan.png'
-        window.iconphoto(True, PhotoImage(file=my_path))
+        icon = f'{os.getcwd()}/static/jordan.png'
+        window.iconphoto(True, PhotoImage(file=icon))
         window.title(WINDOW_TITLE)
         window.geometry(WINDOW_SIZE)
         return window
@@ -221,28 +216,34 @@ class YouTupy:
             master=self._window, text='download', width='10',
             fg='red', command=self._clicked_run_youtupy
         )
-        button.grid(column=6, row=2, sticky='W')
+        button.grid(column=6, row=5, sticky='W')
         return button
 
     def _change_text_canvas(self, text: str) -> None:
         # first set coords to default
-        self._main_canvas.coords(self._canvas_text_id, 5, 5)
-        self._main_canvas.itemconfig(tagOrId=self._canvas_text_id, text=text)
-
-    def _get_main_canvas(self) -> Canvas:
-        canvas = Canvas(master=self._window)
-        canvas.grid(column=6, row=0)
-        # text padding left=5, top=-23
-        self._canvas_text_id = canvas.create_text(
-            5, -23, font=(MY_FONT, 24), text=WELCOME_TO_YOUTUPY, anchor='nw'
+        self._main_canvas.coords(self._main_text_id, 5, 5)
+        self._main_canvas.itemconfig(
+            tagOrId=self._main_text_id, text=text
         )
-        bbox = canvas.bbox(self._canvas_text_id)
+
+    def _get_canvas(self, kw: Dict[str, Union[str, int]]) -> Canvas:
+        canvas = Canvas(master=self._window)
+        canvas.grid(column=kw['column'], row=kw['row'], sticky='W')
+        setattr(
+            self, kw['text_id'],
+            canvas.create_text(
+                5, kw['padding_top'], text=kw['text'],
+                font=(MY_FONT, kw['font_size']), anchor='nw'
+            )
+        )
+        bbox = canvas.bbox(getattr(self, kw['text_id']))
         # size without padding on y bottom and long width
-        canvas.configure(width=bbox[2] + 200, height=bbox[3] - 26)
+        long = 200 if kw['font_size'] == 24 else 0
+        canvas.configure(height=bbox[3], width=bbox[2] + long)
         return canvas
 
     def _get_playlist_url(self) -> Entry:
         playlist_url = Entry(master=self._window, width=30)
-        playlist_url.grid(column=0, row=2)
+        playlist_url.grid(column=0, row=5, sticky='WE')
         playlist_url.focus()
         return playlist_url
