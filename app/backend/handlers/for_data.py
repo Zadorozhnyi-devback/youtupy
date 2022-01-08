@@ -39,7 +39,7 @@ def remove_videos(dir_videos: List[Path]) -> None:
 
 
 def download_playlist_videos(
-        playlist: Playlist, path_to_playlist: str
+    playlist: Playlist, path_to_playlist: str
 ) -> None:
     for video in playlist.videos:
         video.streams.filter(
@@ -60,11 +60,14 @@ def try_download_video(playlist: Playlist, path_to_playlist: str) -> bool:
             continue
 
 
-def download_videos(playlist: Playlist, path_to_playlist: str) -> None:
+def download_videos(
+    playlist: Playlist, path_to_playlist: str,
+    selected_extension: str
+) -> None:
     download_complete = try_download_video(
         playlist=playlist, path_to_playlist=path_to_playlist
     )
-    if download_complete:
+    if download_complete and selected_extension == '.mp3':
         dir_videos = get_dir_mp4_files(path_to_playlist=path_to_playlist)
         convert_mp4_to_mp3(
             dir_videos=dir_videos, path_to_playlist=path_to_playlist
