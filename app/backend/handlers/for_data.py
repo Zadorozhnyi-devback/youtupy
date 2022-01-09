@@ -12,17 +12,17 @@ def get_playlist(playlist_url: str) -> Playlist:
     return Playlist(url=playlist_url)
 
 
-def get_path_to_playlist(playlist_title: str, playlist_path: str) -> str:
-    path = f'{playlist_path}/{playlist_title}'
+def get_path_to_playlist(playlist_title: str, playlist_path: Path) -> Path:
+    path = Path(f'{playlist_path}/{playlist_title}')
     return path
 
 
-def get_dir_mp4_files(path_to_dir: str) -> List[Path]:
-    videos = [file for file in Path(path_to_dir).glob('**/*.mp4')]
+def get_dir_mp4_files(path_to_dir: Path) -> List[Path]:
+    videos = [file for file in path_to_dir.glob('**/*.mp4')]
     return videos
 
 
-def convert_mp4_to_mp3(videos: List[Path], destination_path: str) -> None:
+def convert_mp4_to_mp3(videos: List[Path], destination_path: Path) -> None:
     for video in videos:
         subprocess.call(
             [
@@ -49,6 +49,15 @@ def download_playlist(
         )
 
 
+def download_video(video: YouTube, path: str) -> None:
+    # сделать выпадашку с выбором качества видео
+    video.streams.filter(
+        file_extension='mp4',
+    ).get_highest_resolution().download(
+        output_path=path, filename=f'{video.title}.mp4'
+    )
+
+
 def try_download(
     process_func: str, args: List[Union[Playlist, YouTube]]
 ) -> bool:
@@ -61,46 +70,34 @@ def try_download(
             continue
 
 
-def check_and_download_playlist(
-    playlist: Playlist, path_to_playlist: str,
-    selected_extension: str,
-    process_func: str = 'download_playlist'
+def get_needed_videos(
+    download_type_object: Union[Playlist, YouTube], destination_path: Path
+) -> List[Path]:
+    if isinstance(download_type_object, Playlist):
+        videos = get_dir_mp4_files(path_to_dir=destination_path)
+    # раскоментить когда каналы будут
+    # elif isinstance(download_type_object, YouTube):
+    else:
+        videos = [
+            video for video in
+            destination_path.glob(f'**/{download_type_object.title}.mp4')
+            if video
+        ]
+    return videos
+
+
+def check_and_download(
+    download_type_object: Union[Playlist, YouTube],
+    destination_path: Path, selected_extension: str, process_func: str
 ) -> None:
     download_complete = try_download(
         process_func=process_func,
-        args=[playlist, path_to_playlist]
+        args=[download_type_object, destination_path]
     )
     if download_complete and selected_extension == '.mp3':
-        dir_videos = get_dir_mp4_files(path_to_dir=path_to_playlist)
-        convert_mp4_to_mp3(
-            videos=dir_videos, destination_path=path_to_playlist
+        videos = get_needed_videos(
+            download_type_object=download_type_object,
+            destination_path=destination_path
         )
-        remove_videos(dir_videos=dir_videos)
-
-
-def download_video(video: YouTube, path: str) -> None:
-    # сделать выпадашку с выбором качества видео
-    video.streams.filter(
-        file_extension='mp4',
-    ).get_highest_resolution().download(
-        output_path=path, filename=f'{video.title}.mp4'
-    )
-
-
-def check_and_download_video(
-    video_url: str,
-    selected_extension: str,
-    destination_path: str,
-    process_func: str = 'download_video'
-) -> None:
-    video = YouTube(url=video_url)
-    download_complete = try_download(
-        process_func=process_func, args=[video, destination_path]
-    )
-    if download_complete and selected_extension == '.mp3':
-        video = [
-            video for video
-            in Path(destination_path).glob(f'**/{video.title}.mp4') if video
-        ]
-        convert_mp4_to_mp3(videos=video, destination_path=destination_path)
-        remove_videos(dir_videos=video)
+        convert_mp4_to_mp3(videos=videos, destination_path=destination_path)
+        remove_videos(dir_videos=videos)

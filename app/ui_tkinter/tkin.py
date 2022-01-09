@@ -1,6 +1,7 @@
 import getpass
 import os
 from multiprocessing import Process
+from pathlib import Path
 from time import sleep
 from tkinter import (
     Tk, Label, Button, Entry, Frame, filedialog, messagebox, PhotoImage,
@@ -14,8 +15,7 @@ from pytube.exceptions import RegexMatchError
 
 from backend.const import DEFAULT_PLAYLIST_PATH
 from backend.handlers.for_data import (
-    get_playlist, get_path_to_playlist, check_and_download_playlist,
-    check_and_download_video
+    get_playlist, get_path_to_playlist, check_and_download
 )
 from backend.handlers.for_validation import remove_playlist_dir
 from backend.validators import (
@@ -40,7 +40,7 @@ class YouTupy:
         self._download_button = self._get_download_button()
         self._input_url = self._get_input_url()
         self._playlist = get_playlist(playlist_url=self._input_url.get())
-        self._destination_path = DEFAULT_PLAYLIST_PATH
+        self._destination_path = Path(DEFAULT_PLAYLIST_PATH)
         self._destination_button = self._get_destination_button()
         self._create_empty_strings(rows=[7])
         self._window.mainloop()
@@ -98,7 +98,7 @@ class YouTupy:
             initialdir=f'/Users/{getpass.getuser()}/'
         )
         if self._window.directory:
-            self._destination_path = self._window.directory
+            self._destination_path = Path(self._window.directory)
         self._curr_path_label.configure(
             text=f'{CURR_PATH}{self._destination_path}'
         )
@@ -241,10 +241,10 @@ class YouTupy:
             )
             self._create_progressbar()
             main_process = Process(
-                target=check_and_download_playlist,
+                target=check_and_download,
                 args=(
                     self._playlist, path_to_playlist,
-                    self._selected_extension.get()
+                    self._selected_extension.get(), 'download_playlist'
                 )
             )
             main_process.start()
@@ -258,11 +258,12 @@ class YouTupy:
             self._download_button['state'] = 'disabled'
             self._change_text_canvas(text='loading video...')
             self._create_progressbar()
+            video = YouTube(url=self._input_url.get())
             main_process = Process(
-                target=check_and_download_video,
+                target=check_and_download,
                 args=(
-                    self._input_url.get(), self._selected_extension.get(),
-                    self._destination_path
+                    video, self._destination_path,
+                    self._selected_extension.get(), 'download_video'
                 )
             )
             main_process.start()

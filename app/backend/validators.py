@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import List, Union, Type
 from urllib.error import URLError
 
@@ -10,7 +11,7 @@ from backend.handlers.for_validation import (
 from backend.const import PLAYLIST_PATH, PLAYLIST_URL, DEFAULT_PLAYLIST_PATH
 
 
-def validate_path_existing(playlist_path: str) -> None:
+def validate_path_existing(playlist_path: Path) -> None:
     try:
         chdir_if_path_not_default(playlist_path=playlist_path)
         os.listdir(playlist_path)
@@ -41,13 +42,13 @@ def validate_playlist_existing(playlist: Playlist) -> bool:
         return False
 
 
-def get_listdir(playlist_path: str) -> List[str]:
+def get_listdir(playlist_path: Path) -> List[str]:
     chdir_if_path_not_default(playlist_path=playlist_path)
     dirs = os.listdir(path=playlist_path)
     return dirs
 
 
-def validate_playlist_loaded(args: List[str]) -> bool:
+def validate_playlist_loaded(args: List[Union[Path, str]]) -> bool:
     playlist = Playlist(url=args[PLAYLIST_URL])
     playlist_path = (
         args[PLAYLIST_PATH] if len(args) > 1 else DEFAULT_PLAYLIST_PATH
