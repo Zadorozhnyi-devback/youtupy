@@ -21,7 +21,7 @@ from backend.handlers.for_data import (
 from backend.handlers.for_validation import remove_dir
 from backend.validators import (
     validate_playlist_loaded,
-    validate_playlist_existing, validate_internet_connection
+    validate_playlist_existing, init_load_object_attempt
 )
 from ui_tkinter.const import (
     MAIN_CANVAS_TEXT, EMPTY_PLAYLIST, MY_FONT, STEPS_AMOUNT, CURR_PATH,
@@ -155,14 +155,13 @@ class YouTupy:
 
     def _validate_args(self, download_type: str) -> bool:
         try:
-            if validate_internet_connection(
+            init_load_object_attempt(
                 input_url=self._input_url.get(),
                 download_class=(
                     TYPE_TO_CLASS_TABLE[self._selected_download_type.get()]
                 )
-            ) is False:
-                raise URLError('')
-            self._create_main_download_vars(download_type=download_type)
+            )
+            self._create_main_process_vars(download_type=download_type)
         except (KeyError, URLError, RegexMatchError):
             self._change_text_canvas(
                 text=f'invalid link for {self._selected_download_type.get()}'
@@ -174,7 +173,7 @@ class YouTupy:
         elif selected_type == 'video':
             return self._validate_video()
 
-    def _create_main_download_vars(self, download_type: str):
+    def _create_main_process_vars(self, download_type: str):
         input_url = self._input_url.get()
         class_name = TYPE_TO_CLASS_TABLE[download_type]
         self._download_object = get_download_object(
