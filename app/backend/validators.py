@@ -1,8 +1,8 @@
 import os
-from typing import List
+from typing import List, Union, Type
 from urllib.error import URLError
 
-from pytube import Playlist
+from pytube import Playlist, YouTube
 
 from backend.handlers.for_validation import (
     make_dirs, remove_old_dirs, chdir_if_path_not_default
@@ -21,9 +21,12 @@ def validate_path_existing(playlist_path: str) -> None:
         make_dirs(playlist_path=playlist_path)
 
 
-def validate_internet_connection(playlist: Playlist) -> bool:
+def validate_internet_connection(
+    input_url: str, needed_class: Type[Union[Playlist, YouTube]]
+) -> bool:
     try:
-        getattr(playlist, 'videos')
+        obj = getattr(needed_class, '__init__')
+        setattr(obj, 'url', input_url)
         return True
     except URLError:
         return False
