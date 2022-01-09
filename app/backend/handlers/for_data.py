@@ -1,28 +1,36 @@
+import os
 import subprocess
 from pathlib import Path
 from typing import List, Union
 from urllib.error import URLError
 
 from pytube import Playlist, YouTube
+import pytube
 
 from backend.const import VID_NAME, RETRY_AMOUNT
 
 
-def get_playlist(playlist_url: str) -> Playlist:
-    return Playlist(url=playlist_url)
+def get_download_object(class_name: str, url: str) -> Union[Playlist, YouTube]:
+    obj = getattr(pytube, class_name)(url=url)
+    return obj
 
 
-def get_path_to_playlist(playlist_title: str, playlist_path: Path) -> Path:
-    path = Path(f'{playlist_path}/{playlist_title}')
+def get_path_to_playlist(playlist_title: str, playlist_path: str) -> str:
+    path = str(Path(f'{playlist_path}/{playlist_title}').resolve())
     return path
 
 
-def get_dir_mp4_files(path_to_dir: Path) -> List[Path]:
-    videos = [file for file in path_to_dir.glob('**/*.mp4')]
+def get_dir_mp4_files(path_to_dir: str) -> List[Path]:
+    videos = [file for file in Path(path_to_dir).glob('**/*.mp4')]
     return videos
 
 
-def convert_mp4_to_mp3(videos: List[Path], destination_path: Path) -> None:
+def get_listdir(path: str) -> List[str]:
+    dirs = os.listdir(path=path)
+    return dirs
+
+
+def convert_mp4_to_mp3(videos: List[Path], destination_path: str) -> None:
     for video in videos:
         subprocess.call(
             [
@@ -71,7 +79,7 @@ def try_download(
 
 
 def get_needed_videos(
-    download_type_object: Union[Playlist, YouTube], destination_path: Path
+    download_type_object: Union[Playlist, YouTube], destination_path: str
 ) -> List[Path]:
     if isinstance(download_type_object, Playlist):
         videos = get_dir_mp4_files(path_to_dir=destination_path)
@@ -80,7 +88,7 @@ def get_needed_videos(
     else:
         videos = [
             video for video in
-            destination_path.glob(f'**/{download_type_object.title}.mp4')
+            Path(destination_path).glob(f'**/{download_type_object.title}.mp4')
             if video
         ]
     return videos
@@ -88,7 +96,7 @@ def get_needed_videos(
 
 def check_and_download(
     download_type_object: Union[Playlist, YouTube],
-    destination_path: Path, selected_extension: str, process_func: str
+    destination_path: str, selected_extension: str, process_func: str
 ) -> None:
     download_complete = try_download(
         process_func=process_func,

@@ -9,23 +9,24 @@ from tkinter import (
 )
 from tkinter.ttk import Style, Progressbar, Radiobutton
 from typing import List, Dict, Union
+from urllib.error import URLError
 
 from pytube import YouTube, Playlist
 from pytube.exceptions import RegexMatchError
 
 from backend.const import DEFAULT_PLAYLIST_PATH
 from backend.handlers.for_data import (
-    get_playlist, get_path_to_playlist, check_and_download
+    get_path_to_playlist, check_and_download, get_download_object
 )
-from backend.handlers.for_validation import remove_playlist_dir
+from backend.handlers.for_validation import remove_dir
 from backend.validators import (
-    validate_path_existing, validate_playlist_loaded,
+    validate_playlist_loaded,
     validate_playlist_existing, validate_internet_connection
 )
 from ui_tkinter.const import (
     MAIN_CANVAS_TEXT, EMPTY_PLAYLIST, MY_FONT, STEPS_AMOUNT, CURR_PATH,
     WINDOW_SIZE, WINDOW_TITLE, MAIN_CANVAS_KWARGS, INPUT_CANVAS_KWARGS,
-    LIST_EXISTS_MSG_BOX_MSG, LIST_EXISTS_MSG_BOX_TITLE, NO_INTERNET,
+    LIST_EXISTS_MSG_BOX_MSG, LIST_EXISTS_MSG_BOX_TITLE, TYPE_TO_CLASS_TABLE,
     AVERAGE_DOWNLOAD_N_CONVERT_TIME, AVERAGE_DOWNLOAD_TIME
 )
 
@@ -39,8 +40,7 @@ class YouTupy:
         self._input_canvas = self._get_canvas(kw=INPUT_CANVAS_KWARGS)
         self._download_button = self._get_download_button()
         self._input_url = self._get_input_url()
-        self._playlist = get_playlist(playlist_url=self._input_url.get())
-        self._destination_path = Path(DEFAULT_PLAYLIST_PATH)
+        self._destination_path = str(Path(DEFAULT_PLAYLIST_PATH).resolve())
         self._destination_button = self._get_destination_button()
         self._create_empty_strings(rows=[7])
         self._window.mainloop()
@@ -84,44 +84,11 @@ class YouTupy:
     def _playlist_exists_msg_box(self) -> bool:
         answer = messagebox.askyesno(
             title=LIST_EXISTS_MSG_BOX_TITLE,
-            message=LIST_EXISTS_MSG_BOX_MSG)
+            message=LIST_EXISTS_MSG_BOX_MSG
+        )
         if answer:
-            remove_playlist_dir(
-                playlist_path=self._destination_path,
-                playlist_title=self._playlist.title
-            )
+            remove_dir(path=self._destination_path)
             return True
-
-    def _clicked_choose_dir(self) -> None:
-        self._window.directory = filedialog.askdirectory(
-            # gonna work on mac, have to check for windows and linux
-            initialdir=f'/Users/{getpass.getuser()}/'
-        )
-        if self._window.directory:
-            self._destination_path = Path(self._window.directory)
-        self._curr_path_label.configure(
-            text=f'{CURR_PATH}{self._destination_path}'
-        )
-
-    def _get_curr_path_label(self) -> None:
-        self._curr_path_label = Label(
-            master=self._window,
-            font=(MY_FONT, 14),
-            text=f'{CURR_PATH}{self._destination_path}'
-        )
-        self._curr_path_label.grid(
-            column=0, row=10, sticky='W', columnspan=100
-        )
-
-    def _get_destination_button(self) -> Button:
-        button = Button(
-            master=self._window, text='choose folder', width='12',
-            fg='red', command=self._clicked_choose_dir
-        )
-        button.grid(column=0, row=11, sticky='W')
-
-        self._get_curr_path_label()
-        return button
 
     def _increment_progressbar(self) -> None:
         self._progressbar['value'] += 5
@@ -141,7 +108,7 @@ class YouTupy:
     ) -> None:
         self._progressbar['value'] = 0
         if self._selected_download_type.get() == 'playlist':
-            videos_amount = self._playlist.length
+            videos_amount = self._download_object.length
         # math to get progressbar step time in ms
         average_time_for_video = (
             AVERAGE_DOWNLOAD_N_CONVERT_TIME
@@ -161,6 +128,66 @@ class YouTupy:
         self._progressbar.grid(
             column=0, row=0
         )
+
+    def _validate_playlist(self) -> bool:
+        # подвисаем здесь
+        if validate_playlist_existing(playlist=self._download_object):
+            if validate_playlist_loaded(
+                    [self._input_url.get(), self._destination_path]
+            ):
+                return True
+            else:
+                answer = self._playlist_exists_msg_box()
+                if answer is True:
+                    return True
+                else:
+                    self._change_text_canvas(text=MAIN_CANVAS_TEXT)
+
+        else:
+            self._change_text_canvas(text=EMPTY_PLAYLIST)
+
+    def _validate_video(self) -> bool:
+        try:
+            YouTube(url=self._input_url.get())
+            return True
+        except RegexMatchError:
+            self._change_text_canvas(text='invalid link. is it video?')
+
+    def _validate_args(self, download_type: str) -> bool:
+        try:
+            if validate_internet_connection(
+                input_url=self._input_url.get(),
+                download_class=(
+                    TYPE_TO_CLASS_TABLE[self._selected_download_type.get()]
+                )
+            ) is False:
+                raise URLError('')
+            self._create_main_download_vars(download_type=download_type)
+        except (KeyError, URLError, RegexMatchError):
+            self._change_text_canvas(
+                text=f'invalid link for {self._selected_download_type.get()}'
+            )
+            return False
+        selected_type = self._selected_download_type.get()
+        if selected_type == 'playlist':
+            return self._validate_playlist()
+        elif selected_type == 'video':
+            return self._validate_video()
+
+    def _create_main_download_vars(self, download_type: str):
+        input_url = self._input_url.get()
+        class_name = TYPE_TO_CLASS_TABLE[download_type]
+        self._download_object = get_download_object(
+            class_name=class_name, url=input_url
+        )
+        if download_type == 'playlist':
+            self._download_class = Playlist
+            self._destination_path = get_path_to_playlist(
+                playlist_title=self._download_object.title,
+                playlist_path=self._destination_path
+            )
+        else:
+            self._download_class = YouTube
 
     def _schedule_check(
         self, ms: int, process: Process, func_name: str = '_schedule_check'
@@ -188,107 +215,29 @@ class YouTupy:
             self._change_text_canvas(text='done!')
             self._download_button['state'] = 'normal'
 
-    def _validate_playlist(self) -> bool:
-        # подвисаем здесь
-        if validate_playlist_existing(playlist=self._playlist):
-            if validate_playlist_loaded(
-                    [self._input_url.get(), self._destination_path]
-            ):
-                return True
-            else:
-                answer = self._playlist_exists_msg_box()
-                if answer is True:
-                    return True
-                else:
-                    self._change_text_canvas(text=MAIN_CANVAS_TEXT)
-
-        else:
-            self._change_text_canvas(text=EMPTY_PLAYLIST)
-
-    def _validate_video(self) -> bool:
-        try:
-            YouTube(url=self._input_url.get())
-            return True
-        except RegexMatchError:
-            self._change_text_canvas(text='invalid link. is it video?')
-
-    def _validate_args(self) -> bool:
-        needed_class = (
-            Playlist
-            if self._selected_download_type.get() == 'playlist'
-            else YouTube
-        )
-        if not validate_internet_connection(
-            input_url=self._input_url.get(), needed_class=needed_class
-        ):
-            self._change_text_canvas(text=NO_INTERNET)
-            return False
-        validate_path_existing(playlist_path=self._destination_path)
-        selected_type = self._selected_download_type.get()
-        if selected_type == 'playlist':
-            return self._validate_playlist()
-        elif selected_type == 'video':
-            return self._validate_video()
-
-    def _main_load_playlist(self) -> None:
-        self._playlist = get_playlist(playlist_url=self._input_url.get())
-        if self._validate_args():
+    def _main_download(self) -> None:
+        download_type = self._selected_download_type.get()
+        if self._validate_args(download_type=download_type):
             self._download_button['state'] = 'disabled'
-            self._change_text_canvas(text='loading playlist...')
-            path_to_playlist = get_path_to_playlist(
-                playlist_title=self._playlist.title,
-                playlist_path=self._destination_path
-            )
-            self._create_progressbar()
+            self._change_text_canvas(text=f'loading {download_type}...')
+            func = f'download_{download_type}'
+
             main_process = Process(
                 target=check_and_download,
                 args=(
-                    self._playlist, path_to_playlist,
-                    self._selected_extension.get(), 'download_playlist'
+                    self._download_object, self._destination_path,
+                    self._selected_extension.get(), func
                 )
             )
             main_process.start()
 
-            self._progressbar.tkraise()
-            self._run_progressbar(main_process=main_process)
-            self._schedule_check(ms=1000, process=main_process)
-
-    def _main_load_video(self) -> None:
-        if self._validate_args():
-            self._download_button['state'] = 'disabled'
-            self._change_text_canvas(text='loading video...')
             self._create_progressbar()
-            video = YouTube(url=self._input_url.get())
-            main_process = Process(
-                target=check_and_download,
-                args=(
-                    video, self._destination_path,
-                    self._selected_extension.get(), 'download_video'
-                )
-            )
-            main_process.start()
-
             self._progressbar.tkraise()
             self._run_progressbar(main_process=main_process)
             self._schedule_check(ms=1000, process=main_process)
 
     def _clicked_run_youtupy(self) -> None:
-        selected_type = self._selected_download_type.get()
-        if selected_type == 'playlist':
-            self._main_load_playlist()
-        elif selected_type == 'video':
-            self._main_load_video()
-
-    @staticmethod
-    def _get_window() -> Tk:
-        window = Tk()
-        style = Style(master=window)
-        style.theme_use('aqua')
-        icon = f'{os.getcwd()}/static/jordan.png'
-        window.iconphoto(True, PhotoImage(file=icon))
-        window.title(WINDOW_TITLE)
-        window.geometry(WINDOW_SIZE)
-        return window
+        self._main_download()
 
     def _get_download_button(self) -> Button:
         button = Button(
@@ -296,6 +245,39 @@ class YouTupy:
             fg='red', command=self._clicked_run_youtupy
         )
         button.grid(column=6, row=5, sticky='W')
+        return button
+
+    def _get_curr_path_label(self) -> None:
+        self._curr_path_label = Label(
+            master=self._window,
+            font=(MY_FONT, 14),
+            text=f'{CURR_PATH}{self._destination_path}'
+        )
+        self._curr_path_label.grid(
+            column=0, row=10, sticky='W', columnspan=100
+        )
+
+    def _clicked_choose_dir(self) -> None:
+        self._window.directory = filedialog.askdirectory(
+            # gonna work on mac, have to check for windows and linux
+            initialdir=f'/Users/{getpass.getuser()}/'
+        )
+        if self._window.directory:
+            self._destination_path = (
+                str(Path(self._window.directory).resolve())
+            )
+        self._curr_path_label.configure(
+            text=f'{CURR_PATH}{self._destination_path}'
+        )
+
+    def _get_destination_button(self) -> Button:
+        button = Button(
+            master=self._window, text='choose folder', width='12',
+            fg='red', command=self._clicked_choose_dir
+        )
+        button.grid(column=0, row=11, sticky='W')
+
+        self._get_curr_path_label()
         return button
 
     def _change_text_canvas(self, text: str) -> None:
@@ -325,3 +307,14 @@ class YouTupy:
         playlist_url.grid(column=0, row=5, sticky='WE')
         playlist_url.focus()
         return playlist_url
+
+    @staticmethod
+    def _get_window() -> Tk:
+        window = Tk()
+        style = Style(master=window)
+        style.theme_use('aqua')
+        icon = f'{os.getcwd()}/static/jordan.png'
+        window.iconphoto(True, PhotoImage(file=icon))
+        window.title(WINDOW_TITLE)
+        window.geometry(WINDOW_SIZE)
+        return window

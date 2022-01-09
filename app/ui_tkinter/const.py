@@ -4,10 +4,18 @@ MAIN_CANVAS_TEXT = 'welcome to youtupy!'
 INPUT_CANVAS_TEXT = 'paste your link:'
 LIST_EXISTS_MSG_BOX_MSG = 'override playlist?'
 LIST_EXISTS_MSG_BOX_TITLE = 'playlist exists!'
-NO_INTERNET = 'no Internet connection'
+TYPE_TO_CLASS_TABLE = {
+    'playlist': 'Playlist',
+    'video': 'YouTube'
+}
+DOWNLOAD_CLASS_METHOD = {
+    'Playlist': 'title',
+    'YouTube': 'title'
+}
 # errors
 DIR_EXISTS = ' - playlist folder already exists'
 EMPTY_PLAYLIST = 'something went wrong. check the url'
+
 
 # settings
 WINDOW_TITLE = 'youtupy'
