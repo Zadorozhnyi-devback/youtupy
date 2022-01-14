@@ -20,14 +20,12 @@ from backend.handlers.for_data import (
 )
 from backend.handlers.for_validation import remove_dir
 from backend.validators import (
-    validate_playlist_loaded,
-    validate_playlist_existing, init_load_object_attempt
+    validate_object, init_load_object_attempt, validate_already_loaded
 )
 from ui_tkinter.const import (
     MAIN_CANVAS_TEXT, EMPTY_PLAYLIST, MY_FONT, STEPS_AMOUNT, CURR_PATH,
     WINDOW_SIZE, WINDOW_TITLE, MAIN_CANVAS_KWARGS, INPUT_CANVAS_KWARGS,
-    LIST_EXISTS_MSG_BOX_MSG, LIST_EXISTS_MSG_BOX_TITLE, TYPE_TO_CLASS_TABLE,
-    AVERAGE_DOWNLOAD_N_CONVERT_TIME, AVERAGE_DOWNLOAD_TIME
+    TYPE_TO_CLASS_TABLE, AVERAGE_DOWNLOAD_N_CONVERT_TIME, AVERAGE_DOWNLOAD_TIME
 )
 
 
@@ -81,13 +79,28 @@ class YouTupy:
         radiobutton_playlist.grid(column=3, row=0, padx=(10, 0))
         radiobutton_video.grid(column=4, row=0)
 
-    def _playlist_exists_msg_box(self) -> bool:
+    def _object_exists_msg_box(self) -> bool:
+        object_type = self._selected_download_type.get()
+        load_object = self._download_object
+        object_name = load_object.title
+        extension = self._selected_extension.get()
+        extension = (
+            extension if object_type == 'video' else f' ({extension})'
+        )
+        object_type = (
+            'audio' if object_type == 'video' and extension == '.mp3'
+            else object_type
+        )
+        path = self._destination_path
+        path = (
+            path if isinstance(load_object, YouTube)
+            else f'{path}/{object_name}'
+        )
         answer = messagebox.askyesno(
-            title=LIST_EXISTS_MSG_BOX_TITLE,
-            message=LIST_EXISTS_MSG_BOX_MSG
+            message=f'override {object_type}?\n\n{object_name}{extension}'
         )
         if answer:
-            remove_dir(path=self._destination_path)
+            remove_dir(path=path)
             return True
 
     def _increment_progressbar(self) -> None:
@@ -125,19 +138,26 @@ class YouTupy:
             master=self._window, mode='determinate',
             orient='horizontal', length=265
         )
-        self._progressbar.grid(
-            column=0, row=0
-        )
+        self._progressbar.grid(column=0, row=0)
 
     def _validate_playlist(self) -> bool:
         # подвисаем здесь
-        if validate_playlist_existing(playlist=self._download_object):
-            if validate_playlist_loaded(
-                    [self._input_url.get(), self._destination_path]
+        download_type = self._selected_download_type.get()
+        if validate_object(
+            load_object=self._download_object,
+            download_type=download_type
+        ):
+            path = get_path_to_playlist(
+                playlist_title=self._download_object.title,
+                playlist_path=self._destination_path
+            )
+            extension = self._selected_extension.get()
+            if validate_already_loaded(
+                [self._input_url.get(), path, download_type, extension]
             ):
                 return True
             else:
-                answer = self._playlist_exists_msg_box()
+                answer = self._object_exists_msg_box()
                 if answer is True:
                     return True
                 else:
@@ -147,11 +167,23 @@ class YouTupy:
             self._change_text_canvas(text=EMPTY_PLAYLIST)
 
     def _validate_video(self) -> bool:
+        path = self._destination_path
+        download_type = self._selected_download_type.get()
+        extension = self._selected_extension.get()
         try:
             YouTube(url=self._input_url.get())
-            return True
         except RegexMatchError:
             self._change_text_canvas(text='invalid link. is it video?')
+        if validate_already_loaded(
+            [self._input_url.get(), path, download_type, extension]
+        ):
+            return True
+        else:
+            answer = self._object_exists_msg_box()
+            if answer is True:
+                return True
+            else:
+                self._change_text_canvas(text=MAIN_CANVAS_TEXT)
 
     def _validate_args(self, download_type: str) -> bool:
         try:
@@ -167,11 +199,9 @@ class YouTupy:
                 text=f'invalid link for {self._selected_download_type.get()}'
             )
             return False
-        selected_type = self._selected_download_type.get()
-        if selected_type == 'playlist':
-            return self._validate_playlist()
-        elif selected_type == 'video':
-            return self._validate_video()
+        return (
+            getattr(self, f'_validate_{self._selected_download_type.get()}')()
+        )
 
     def _create_main_process_vars(self, download_type: str):
         input_url = self._input_url.get()
@@ -179,14 +209,9 @@ class YouTupy:
         self._download_object = get_download_object(
             class_name=class_name, url=input_url
         )
-        if download_type == 'playlist':
-            self._download_class = Playlist
-            self._destination_path = get_path_to_playlist(
-                playlist_title=self._download_object.title,
-                playlist_path=self._destination_path
-            )
-        else:
-            self._download_class = YouTube
+        self._download_class = (
+            Playlist if download_type == 'playlist' else YouTube
+        )
 
     def _schedule_check(
         self, ms: int, process: Process, func_name: str = '_schedule_check'
@@ -220,11 +245,16 @@ class YouTupy:
             self._download_button['state'] = 'disabled'
             self._change_text_canvas(text=f'loading {download_type}...')
             func = f'download_{download_type}'
+            path = (
+                self._destination_path
+                if isinstance(self._download_object, YouTube)
+                else f'{self._destination_path}/{self._download_object.title}'
+            )
 
             main_process = Process(
                 target=check_and_download,
                 args=(
-                    self._download_object, self._destination_path,
+                    self._download_object, path,
                     self._selected_extension.get(), func
                 )
             )

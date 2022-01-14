@@ -2,8 +2,6 @@
 CURR_PATH = 'current folder: '
 MAIN_CANVAS_TEXT = 'welcome to youtupy!'
 INPUT_CANVAS_TEXT = 'paste your link:'
-LIST_EXISTS_MSG_BOX_MSG = 'override playlist?'
-LIST_EXISTS_MSG_BOX_TITLE = 'playlist exists!'
 TYPE_TO_CLASS_TABLE = {
     'playlist': 'Playlist',
     'video': 'YouTube'
@@ -12,6 +10,11 @@ DOWNLOAD_CLASS_METHOD = {
     'Playlist': 'title',
     'YouTube': 'title'
 }
+TYPE_TO_METHOD_TABLE = {
+    'playlist': 'videos',
+    'video': 'title'
+}
+
 # errors
 DIR_EXISTS = ' - playlist folder already exists'
 EMPTY_PLAYLIST = 'something went wrong. check the url'

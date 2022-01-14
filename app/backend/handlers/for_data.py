@@ -16,7 +16,11 @@ def get_download_object(class_name: str, url: str) -> Union[Playlist, YouTube]:
 
 
 def get_path_to_playlist(playlist_title: str, playlist_path: str) -> str:
+    print('-' * 20)
+    print(playlist_title)
+    print(playlist_path)
     path = str(Path(f'{playlist_path}/{playlist_title}').resolve())
+    # path = str(Path(playlist_path).resolve())
     return path
 
 
@@ -46,9 +50,7 @@ def remove_videos(dir_videos: List[Path]) -> None:
         video.unlink()
 
 
-def download_playlist(
-    playlist: Playlist, path_to_playlist: str
-) -> None:
+def download_playlist(playlist: Playlist, path_to_playlist: str) -> None:
     for video in playlist.videos:
         video.streams.filter(
             only_audio=True
@@ -71,8 +73,9 @@ def try_download(
 ) -> bool:
     for _ in range(RETRY_AMOUNT):
         try:
-            # didn't find another solution, so call func by its name like this
-            eval(f"{process_func}(*args)")
+            import sys
+            module_name = sys.modules[__name__]
+            getattr(module_name, process_func)(*args)
             return True
         except URLError:
             continue
@@ -96,16 +99,16 @@ def get_needed_videos(
 
 def check_and_download(
     download_type_object: Union[Playlist, YouTube],
-    destination_path: str, selected_extension: str, process_func: str
+    path: str, selected_extension: str, process_func: str
 ) -> None:
     download_complete = try_download(
         process_func=process_func,
-        args=[download_type_object, destination_path]
+        args=[download_type_object, path]
     )
     if download_complete and selected_extension == '.mp3':
         videos = get_needed_videos(
             download_type_object=download_type_object,
-            destination_path=destination_path
+            destination_path=path
         )
-        convert_mp4_to_mp3(videos=videos, destination_path=destination_path)
+        convert_mp4_to_mp3(videos=videos, destination_path=path)
         remove_videos(dir_videos=videos)
