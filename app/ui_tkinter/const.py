@@ -35,3 +35,6 @@ MAIN_CANVAS_KWARGS = {
             'column': 6, 'row': 0, 'font_size': 24, 'padding_top': 8,
             'text_id': '_main_text_id', 'text': MAIN_CANVAS_TEXT, 'long': 200
         }
+UNWISHED_NAME_PARTS = [
+    '(official video)', '(official)', '(official music video)'
+]

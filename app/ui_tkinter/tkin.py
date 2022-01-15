@@ -16,9 +16,10 @@ from pytube.exceptions import RegexMatchError
 
 from backend.const import DEFAULT_PLAYLIST_PATH
 from backend.handlers.for_data import (
-    get_path_to_playlist, check_and_download, get_download_object
+    get_path_to_playlist, check_and_download, get_download_object,
+    get_clean_title
 )
-from backend.handlers.for_validation import remove_dir
+from backend.handlers.for_validation import remove_dir, remove_file
 from backend.validators import (
     validate_object, init_load_object_attempt, validate_already_loaded
 )
@@ -82,7 +83,7 @@ class YouTupy:
     def _object_exists_msg_box(self) -> bool:
         object_type = self._selected_download_type.get()
         load_object = self._download_object
-        object_name = load_object.title
+        object_name = get_clean_title(title=load_object.title)
         extension = self._selected_extension.get()
         extension = (
             extension if object_type == 'video' else f' ({extension})'
@@ -93,14 +94,18 @@ class YouTupy:
         )
         path = self._destination_path
         path = (
-            path if isinstance(load_object, YouTube)
+            f'{path}/{object_name}{extension}'
+            if isinstance(load_object, YouTube)
             else f'{path}/{object_name}'
         )
         answer = messagebox.askyesno(
             message=f'override {object_type}?\n\n{object_name}{extension}'
         )
         if answer:
-            remove_dir(path=path)
+            if object_type in ('video', 'audio'):
+                remove_file(path=path)
+            else:
+                remove_dir(path=path)
             return True
 
     def _increment_progressbar(self) -> None:
@@ -147,8 +152,10 @@ class YouTupy:
             load_object=self._download_object,
             download_type=download_type
         ):
+            object_title = self._download_object.title
+            object_title = get_clean_title(title=object_title)
             path = get_path_to_playlist(
-                playlist_title=self._download_object.title,
+                playlist_title=object_title,
                 playlist_path=self._destination_path
             )
             extension = self._selected_extension.get()
@@ -242,21 +249,24 @@ class YouTupy:
     def _main_download(self) -> None:
         download_type = self._selected_download_type.get()
         if self._validate_args(download_type=download_type):
+            extension = self._selected_extension.get()
             self._download_button['state'] = 'disabled'
-            self._change_text_canvas(text=f'loading {download_type}...')
+            alias = download_type
+            if download_type == 'video' and extension == '.mp3':
+                alias = 'audio'
+            self._change_text_canvas(text=f'loading {alias}...')
             func = f'download_{download_type}'
+            object_title = self._download_object.title
+            object_title = get_clean_title(title=object_title)
             path = (
                 self._destination_path
                 if isinstance(self._download_object, YouTube)
-                else f'{self._destination_path}/{self._download_object.title}'
+                else f'{self._destination_path}/{object_title}'
             )
 
             main_process = Process(
                 target=check_and_download,
-                args=(
-                    self._download_object, path,
-                    self._selected_extension.get(), func
-                )
+                args=(self._download_object, path, extension, func)
             )
             main_process.start()
 

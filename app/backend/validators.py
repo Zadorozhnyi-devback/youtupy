@@ -3,7 +3,9 @@ from typing import List, Union
 from pytube import Playlist, YouTube
 import pytube
 
-from backend.handlers.for_data import get_listdir, get_download_object
+from backend.handlers.for_data import (
+    get_listdir, get_download_object, get_clean_title
+)
 from backend.const import DOWNLOAD_TYPE, DESTINATION_PATH, INPUT_URL, EXTENSION
 from ui_tkinter.const import (
     DOWNLOAD_CLASS_METHOD, TYPE_TO_CLASS_TABLE, TYPE_TO_METHOD_TABLE
@@ -35,12 +37,15 @@ def validate_already_loaded(args: List[str]) -> bool:
     path_to_object = args[DESTINATION_PATH]
 
     object_name = get_download_object(class_name=class_name, url=url).title
+    object_name = get_clean_title(title=object_name)
+    object_name = (
+        object_name if loading_object != 'video'
+        else f'{object_name}{args[EXTENSION]}'
+    )
     without_object_name = -len(object_name)
 
     if loading_object != 'video':
         path_to_object = path_to_object[:without_object_name]
-    else:
-        object_name = f'{object_name}{args[EXTENSION]}'
 
     try:
         dir_files = get_listdir(path=path_to_object)
