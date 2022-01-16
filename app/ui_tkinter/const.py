@@ -1,5 +1,5 @@
 # aliases
-CURR_PATH = 'current folder: '
+CURR_PATH = 'current folder'
 MAIN_CANVAS_TEXT = 'welcome to youtupy!'
 INPUT_CANVAS_TEXT = 'paste your link:'
 TYPE_TO_CLASS_TABLE = {
@@ -16,7 +16,6 @@ TYPE_TO_METHOD_TABLE = {
 }
 
 # errors
-DIR_EXISTS = ' - playlist folder already exists'
 EMPTY_PLAYLIST = 'something went wrong. check the url'
 
 

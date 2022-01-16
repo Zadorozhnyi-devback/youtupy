@@ -4,6 +4,7 @@ __pycache__
 # Files to ignore
 test
 playlists
+downloads
 
 
 # Environment files

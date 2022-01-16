@@ -5,7 +5,7 @@ from pathlib import Path
 from time import sleep
 from tkinter import (
     Tk, Label, Button, Entry, Frame, filedialog, messagebox, PhotoImage,
-    StringVar, Canvas
+    StringVar, Canvas, Event
 )
 from tkinter.ttk import Style, Progressbar, Radiobutton
 from typing import List, Dict, Union
@@ -14,7 +14,7 @@ from urllib.error import URLError
 from pytube import YouTube, Playlist
 from pytube.exceptions import RegexMatchError
 
-from backend.const import DEFAULT_PLAYLIST_PATH
+from backend.const import DEFAULT_DOWNLOAD_PATH
 from backend.handlers.for_data import (
     get_path_to_playlist, check_and_download, get_download_object,
     get_clean_title
@@ -39,7 +39,7 @@ class YouTupy:
         self._input_canvas = self._get_canvas(kw=INPUT_CANVAS_KWARGS)
         self._download_button = self._get_download_button()
         self._input_url = self._get_input_url()
-        self._destination_path = str(Path(DEFAULT_PLAYLIST_PATH).resolve())
+        self._destination_path = str(Path(DEFAULT_DOWNLOAD_PATH).resolve())
         self._destination_button = self._get_destination_button()
         self._create_empty_strings(rows=[7])
         self._window.mainloop()
@@ -101,6 +101,7 @@ class YouTupy:
         answer = messagebox.askyesno(
             message=f'override {object_type}?\n\n{object_name}{extension}'
         )
+        self._input_url.focus()
         if answer:
             if object_type in ('video', 'audio'):
                 remove_file(path=path)
@@ -177,10 +178,6 @@ class YouTupy:
         path = self._destination_path
         download_type = self._selected_download_type.get()
         extension = self._selected_extension.get()
-        try:
-            YouTube(url=self._input_url.get())
-        except RegexMatchError:
-            self._change_text_canvas(text='invalid link. is it video?')
         if validate_already_loaded(
             [self._input_url.get(), path, download_type, extension]
         ):
@@ -249,12 +246,13 @@ class YouTupy:
     def _main_download(self) -> None:
         download_type = self._selected_download_type.get()
         if self._validate_args(download_type=download_type):
-            extension = self._selected_extension.get()
-            self._download_button['state'] = 'disabled'
             alias = download_type
+            extension = self._selected_extension.get()
             if download_type == 'video' and extension == '.mp3':
                 alias = 'audio'
             self._change_text_canvas(text=f'loading {alias}...')
+            self._download_button['state'] = 'disabled'
+
             func = f'download_{download_type}'
             object_title = self._download_object.title
             object_title = get_clean_title(title=object_title)
@@ -290,23 +288,23 @@ class YouTupy:
         self._curr_path_label = Label(
             master=self._window,
             font=(MY_FONT, 14),
-            text=f'{CURR_PATH}{self._destination_path}'
+            text=f'{CURR_PATH}: {self._destination_path}'
         )
         self._curr_path_label.grid(
             column=0, row=10, sticky='W', columnspan=100
         )
 
     def _clicked_choose_dir(self) -> None:
-        self._window.directory = filedialog.askdirectory(
+        directory = filedialog.askdirectory(
             # gonna work on mac, have to check for windows and linux
+            # initialdir=os.path.normpath("C://") try on Windows
+            parent=self._window,  # костыль для возврата фокуса в инпут после
             initialdir=f'/Users/{getpass.getuser()}/'
         )
-        if self._window.directory:
-            self._destination_path = (
-                str(Path(self._window.directory).resolve())
-            )
+        if directory:
+            self._destination_path = (str(Path(directory).resolve()))
         self._curr_path_label.configure(
-            text=f'{CURR_PATH}{self._destination_path}'
+            text=f'{CURR_PATH}: {self._destination_path}'
         )
 
     def _get_destination_button(self) -> Button:
@@ -347,9 +345,15 @@ class YouTupy:
         playlist_url.focus()
         return playlist_url
 
-    @staticmethod
-    def _get_window() -> Tk:
+    def _closer(self, _: Event) -> None:
+        self._window.destroy()
+
+    def _get_window(self) -> Tk:
         window = Tk()
+
+        # binds
+        window.bind('<Escape>', self._closer)
+
         style = Style(master=window)
         style.theme_use('aqua')
         icon = f'{os.getcwd()}/static/jordan.png'
