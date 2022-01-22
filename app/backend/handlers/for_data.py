@@ -23,7 +23,7 @@ def get_path_to_playlist(playlist_title: str, playlist_path: str) -> str:
 
 
 def get_dir_mp4_files(path_to_dir: str) -> List[Path]:
-    videos = [file for file in Path(path_to_dir).glob('**/*.mp4')]
+    videos = [file for file in Path(path_to_dir).glob('*.mp4')]
     return videos
 
 
@@ -33,9 +33,12 @@ def get_listdir(path: str) -> List[str]:
 
 
 def convert_mp4_to_mp3(video_titles: List[str], destination_path: str) -> None:
+    print('titles', video_titles)
     for video in video_titles:
         old_title = f'{destination_path}/{video}'
         new_title = f"{destination_path}/{video.split('.mp4')[VID_NAME]}.mp3"
+        print('new', new_title)
+        print('dest', destination_path)
         subprocess.call(['ffmpeg', '-i', old_title, new_title])
 
 
@@ -99,9 +102,10 @@ def get_needed_videos(
         )
         videos = [
             video for video in
-            Path(destination_path).glob(f'**/{object_title}')
+            Path(destination_path).glob(object_title)
             if video
         ]
+    print('videossss', videos)
     return videos
 
 

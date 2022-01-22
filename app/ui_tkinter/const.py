@@ -35,5 +35,14 @@ MAIN_CANVAS_KWARGS = {
             'text_id': '_main_text_id', 'text': MAIN_CANVAS_TEXT, 'long': 200
         }
 UNWISHED_NAME_PARTS = [
-    '(official video)', '(official)', '(official music video)'
+    '(official video)', '(remix - official video)', '(official)', '(hd)',
+    '(official music video)', '(lyric video)', '[official video]',
+    '[official lyric video]', 'official lyric video', '(official lyric video)',
+    'official video - ', ' - official video', 'official video',
+    'official audio', '(official audio)', '[official audio]', '(audio)'
+    '[official music video]', '(official 4k video)', '[video]', '[audio]',
+    '(video)', '[official animated video]', '[official animated music video]',
+    '(official animated video)', '(official animated music video)',
+    '(official mixtape)', '[official mixtape]', '(official hd video)',
+    '[official hd video]'
 ]
