@@ -16,7 +16,7 @@ from pytube.exceptions import RegexMatchError
 
 from backend.const import DEFAULT_DOWNLOAD_PATH
 from backend.handlers.for_data import (
-    get_path_to_playlist, check_and_download, get_download_object,
+    get_path_to_playlist, download_object, get_download_object,
     get_clean_title
 )
 from backend.handlers.for_validation import remove_dir, remove_file
@@ -26,7 +26,7 @@ from backend.validators import (
 from ui_tkinter.const import (
     MAIN_CANVAS_TEXT, EMPTY_PLAYLIST, MY_FONT, STEPS_AMOUNT, CURR_PATH,
     WINDOW_SIZE, WINDOW_TITLE, MAIN_CANVAS_KWARGS, INPUT_CANVAS_KWARGS,
-    TYPE_TO_CLASS_TABLE, AVERAGE_DOWNLOAD_N_CONVERT_TIME, AVERAGE_DOWNLOAD_TIME
+    TYPE_TO_CLASS_TABLE, AVERAGE_DOWNLOAD_TIME
 )
 
 
@@ -122,21 +122,14 @@ class YouTupy:
                 return
             self._window.after(ms, func, ms, main_process)
 
-    def _run_progressbar(
-        self, main_process: Process, videos_amount: int = 1
-    ) -> None:
+    def _run_progressbar(self, main_process: Process) -> None:
         self._progressbar['value'] = 0
+        videos_amount = 1
         if self._selected_download_type.get() == 'playlist':
             videos_amount = self._download_object.length
-        # math to get progressbar step time in ms
-        average_time_for_video = (
-            AVERAGE_DOWNLOAD_N_CONVERT_TIME
-            if self._selected_extension.get() == '.mp3'
-            else AVERAGE_DOWNLOAD_TIME
-        )
-        ms = int(
-            videos_amount * average_time_for_video / STEPS_AMOUNT * 1000
-        )
+
+        ms = int(videos_amount * AVERAGE_DOWNLOAD_TIME / STEPS_AMOUNT * 1000)
+
         self._update_progressbar(ms=ms, main_process=main_process)
 
     def _create_progressbar(self) -> None:
@@ -243,6 +236,18 @@ class YouTupy:
             self._change_text_canvas(text='done!')
             self._download_button['state'] = 'normal'
 
+    def _get_download_button(self) -> Button:
+        button = Button(
+            master=self._window, text='download', width='10',
+            fg='red', command=lambda: self._clicked_run_youtupy()
+        )
+        button.grid(column=6, row=5, sticky='W')
+        return button
+
+    def _clicked_run_youtupy(self) -> None:
+        print('clicked!')
+        self._main_download()
+
     def _main_download(self) -> None:
         download_type = self._selected_download_type.get()
         if self._validate_args(download_type=download_type):
@@ -256,33 +261,27 @@ class YouTupy:
             func = f'download_{download_type}'
             object_title = self._download_object.title
             object_title = get_clean_title(title=object_title)
-            path = (
-                self._destination_path
-                if isinstance(self._download_object, YouTube)
-                else f'{self._destination_path}/{object_title}'
-            )
+            path = self.get_or_create_path(object_title)
 
             main_process = Process(
-                target=check_and_download,
+                target=download_object,
                 args=(self._download_object, path, extension, func)
             )
             main_process.start()
-
+            print("main process started")
             self._create_progressbar()
             self._progressbar.tkraise()
             self._run_progressbar(main_process=main_process)
             self._schedule_check(ms=1000, process=main_process)
 
-    def _clicked_run_youtupy(self) -> None:
-        self._main_download()
-
-    def _get_download_button(self) -> Button:
-        button = Button(
-            master=self._window, text='download', width='10',
-            fg='red', command=self._clicked_run_youtupy
+    def get_or_create_path(self, object_title) -> str:
+        path = (
+            self._destination_path
+            if isinstance(self._download_object, YouTube)
+            else f'{self._destination_path}/{object_title}'
         )
-        button.grid(column=6, row=5, sticky='W')
-        return button
+        os.makedirs(path, exist_ok=True)
+        return path
 
     def _get_curr_path_label(self) -> None:
         self._curr_path_label = Label(
@@ -298,7 +297,7 @@ class YouTupy:
         directory = filedialog.askdirectory(
             # gonna work on mac, have to check for windows and linux
             # initialdir=os.path.normpath("C://") try on Windows
-            parent=self._window,  # костыль для возврата фокуса в инпут после
+            parent=self._window,
             initialdir=f'/Users/{getpass.getuser()}/'
         )
         if directory:
@@ -340,10 +339,10 @@ class YouTupy:
         return canvas
 
     def _get_input_url(self) -> Entry:
-        playlist_url = Entry(master=self._window, width=30)
-        playlist_url.grid(column=0, row=5, sticky='WE')
-        playlist_url.focus()
-        return playlist_url
+        input_url = Entry(master=self._window, width=30)
+        input_url.grid(column=0, row=5, sticky='WE')
+        input_url.focus()
+        return input_url
 
     def _closer(self, _: Event) -> None:
         self._window.destroy()
@@ -352,7 +351,8 @@ class YouTupy:
         window = Tk()
 
         # binds
-        window.bind('<Escape>', self._closer)
+        window.bind('<Escape>', lambda _: self._closer(_))
+        # window.bind('<Enter>', lambda _: self._clicked_run_youtupy())
 
         style = Style(master=window)
         style.theme_use('aqua')
