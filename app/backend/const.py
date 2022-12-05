@@ -1,13 +1,9 @@
 __all__ = (
-    'DEFAULT_DOWNLOAD_PATH',
     'INPUT_URL',
     'DESTINATION_PATH',
     'DOWNLOAD_TYPE',
     'EXTENSION'
 )
-
-
-DEFAULT_DOWNLOAD_PATH = 'downloads'
 
 INPUT_URL = 0
 DESTINATION_PATH = 1

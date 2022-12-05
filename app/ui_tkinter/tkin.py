@@ -4,8 +4,8 @@ from multiprocessing import Process
 from pathlib import Path
 from time import sleep
 from tkinter import (
-    Tk, Label, Button, Entry, Frame, filedialog, messagebox, PhotoImage,
-    StringVar, Canvas, Event
+    Tk, Label, Button, Entry, Frame, filedialog,
+    messagebox, PhotoImage, StringVar, Canvas, Event
 )
 from tkinter.ttk import Style, Progressbar, Radiobutton
 from typing import List, Dict, Union
@@ -14,10 +14,9 @@ from urllib.error import URLError
 from pytube import YouTube, Playlist
 from pytube.exceptions import RegexMatchError
 
-from backend.const import DEFAULT_DOWNLOAD_PATH
 from backend.handlers.for_data import (
-    get_path_to_playlist, download_object, get_download_object,
-    get_clean_title
+    get_path_to_playlist, download_object,
+    get_download_object, get_clean_title
 )
 from backend.handlers.for_validation import remove_dir, remove_file
 from backend.validators import (
@@ -39,10 +38,15 @@ class YouTupy:
         self._input_canvas = self._get_canvas(kw=INPUT_CANVAS_KWARGS)
         self._download_button = self._get_download_button()
         self._input_url = self._get_input_url()
-        self._destination_path = str(Path(DEFAULT_DOWNLOAD_PATH).resolve())
+        self._destination_path = self._get_default_download_path()
         self._destination_button = self._get_destination_button()
         self._create_empty_strings(rows=[7])
         self._window.mainloop()
+
+    @staticmethod
+    def _get_default_download_path() -> str:
+        path = f'/Users/{getpass.getuser()}/downloads/youtupy'
+        return path
 
     def _create_empty_strings(self, rows: List[int]) -> None:
         for row in rows:
