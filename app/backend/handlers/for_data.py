@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 from pathlib import Path
 from typing import List, Union
@@ -15,12 +16,14 @@ from ui_tkinter.const import UNWISHED_NAME_PARTS
 __all__ = (
     'get_download_object',
     'get_path_to_playlist',
-    'get_listdir',
     'clean_na_from_mp3',
     'get_clean_title',
     'download_object',
     'download_video',
     'download_playlist',
+    'get_listdir',
+    'remove_dir',
+    'remove_file'
 )
 
 
@@ -32,11 +35,6 @@ def get_download_object(class_name: str, url: str) -> Union[Playlist, YouTube]:
 def get_path_to_playlist(playlist_title: str, playlist_path: str) -> str:
     path = str(Path(f'{playlist_path}/{playlist_title}').resolve())
     return path
-
-
-def get_listdir(path: str) -> List[str]:
-    dirs = os.listdir(path=path)
-    return dirs
 
 
 def clean_na_from_mp3(path: str) -> None:
@@ -137,3 +135,16 @@ def download_playlist(
                 )
             except URLError:
                 continue
+
+
+def get_listdir(path: str) -> List[str]:
+    dirs = os.listdir(path=path)
+    return dirs
+
+
+def remove_dir(path: str) -> None:
+    shutil.rmtree(path=path)
+
+
+def remove_file(path: str) -> None:
+    os.remove(path=path)
