@@ -21,7 +21,11 @@ class ClickedMixin:
             initialdir=f'/Users/{getpass.getuser()}/'
         )
         if directory:
-            self._destination_path = (str(Path(directory).resolve()))
+            full_path = str(Path(directory).resolve())
+            self._destination_path = full_path
+
+            self._add_path_in_cache(full_path)  # noqa
+
         self._curr_path_label.configure(  # noqa
             text=f'{CURR_PATH}: {self._destination_path}'
         )

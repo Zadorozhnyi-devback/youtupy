@@ -3,6 +3,7 @@ import getpass
 from ui_tkinter.const import MAIN_CANVAS_KWARGS, INPUT_CANVAS_KWARGS
 from ui_tkinter.mixins import (
     ButtonsMixin,
+    CacherMixin,
     ClickedMixin,
     DownloaderMixin,
     EntriesMixin,
@@ -21,6 +22,7 @@ __all__ = 'YouTupy',
 
 class YouTupy(
     ButtonsMixin,
+    CacherMixin,
     ClickedMixin,
     DownloaderMixin,
     EntriesMixin,
@@ -32,7 +34,10 @@ class YouTupy(
     WindowsMixin,
     YouTupyValidator
 ):
-    def __init__(self) -> None:
+
+    def __init__(self, main_script_path: str) -> None:
+        self._main_script_path = main_script_path
+
         self._window = self._get_window()
 
         self._create_extension_radiobuttons()
@@ -52,7 +57,12 @@ class YouTupy(
 
         self._window.mainloop()
 
-    @staticmethod
-    def _get_default_download_path() -> str:
-        path = f'/Users/{getpass.getuser()}/downloads/youtupy'
+    def _get_default_download_path(self) -> str:
+        cache = self._get_cache()
+
+        if 'download_path' in cache:
+            path = cache.get('download_path')
+        else:
+            path = f'/Users/{getpass.getuser()}/downloads/youtupy'
+
         return path
