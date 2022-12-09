@@ -7,16 +7,6 @@ __all__ = 'CacherMixin',
 
 
 class CacherMixin:
-    def _get_cache(self) -> dict:
-        cache = dict()
-
-        path = Path(self._cache_path)
-        if path.exists() and path.stat().st_size > 0:
-            with open(self.cache_path) as file:  # noqa
-                cache = json.load(file)
-
-        return cache
-
     def _add_path_in_cache(self, path: str) -> None:
         cache = self._get_cache()
 
@@ -24,6 +14,16 @@ class CacherMixin:
 
         with open(self._cache_path, 'w') as file:  # noqa
             file.write(json.dumps(cache))
+
+    def _get_cache(self) -> dict:
+        cache = dict()
+
+        path = Path(self._cache_path)
+        if path.exists() and path.stat().st_size > 0:
+            with open(self._cache_path) as file:  # noqa
+                cache = json.load(file)
+
+        return cache
 
     @property
     def _cache_path(self) -> str:
