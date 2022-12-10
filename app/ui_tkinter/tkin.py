@@ -35,8 +35,8 @@ class YouTupy(
     YouTupyValidator
 ):
 
-    def __init__(self, main_script_path: str) -> None:
-        self._main_script_path = main_script_path
+    def __init__(self, entry_point_path: str) -> None:
+        self._entry_point_path = entry_point_path
 
         self._window = self._get_window()
 

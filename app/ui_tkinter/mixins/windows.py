@@ -15,10 +15,12 @@ class WindowsMixin:
         window.bind('<Escape>', lambda _: self._closer(_))  # noqa
         # window.bind('<Enter>', lambda _: self._clicked_run_youtupy())
 
+        self._set_exit_cross_signal(frame=window)  # noqa
+
         style = Style(master=window)
         style.theme_use('aqua')
 
-        icon = f'{self._main_script_path}/static/jordan.png'  # noqa
+        icon = f'{self._entry_point_path}/static/jordan.png'  # noqa
         window.iconphoto(True, PhotoImage(file=icon))
         window.title(WINDOW_TITLE)
         window.geometry(WINDOW_SIZE)

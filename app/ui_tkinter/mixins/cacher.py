@@ -27,7 +27,7 @@ class CacherMixin:
 
     @property
     def _cache_path(self) -> str:
-        cache_path = f'{self._main_script_path}/cache.json'  # noqa
+        cache_path = f'{self._entry_point_path}/cache.json'  # noqa
         if not os.path.exists(cache_path):
             Path(cache_path).touch(exist_ok=True)  # noqa
 

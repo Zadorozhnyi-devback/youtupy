@@ -10,7 +10,7 @@ from setuptools import setup
 
 APP = ['app/youtupy.py']
 DATA_FILES = [
-    ('static', glob.glob('static/jordan.png'))
+    ('static', glob.glob('app/static/jordan.png'))
 ]
 
 OPTIONS = {

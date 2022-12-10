@@ -34,10 +34,11 @@ class PopupsMixin:
         answer = messagebox.askyesno(
             message=f'override {object_type}?\n\n{object_name}{extension}'
         )
-        self._input_url.focus()  # noqa
         if answer:
             if object_type in ('video', 'audio'):
                 remove_file(path=path)
             else:
                 remove_dir(path=path)
-            return True
+
+        self._input_url.focus_force()  # noqa
+        return answer
