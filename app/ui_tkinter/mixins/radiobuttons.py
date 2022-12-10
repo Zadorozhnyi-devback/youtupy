@@ -8,7 +8,7 @@ __all__ = 'RadioButtonsMixin',
 class RadioButtonsMixin:
     def _create_extension_radiobuttons(self) -> None:
         self._radio_frame = Frame(master=self._window)  # noqa
-        self._radio_frame.grid(column=0, row=6, padx=(10, 1))
+        self._radio_frame.grid(column=0, row=3, padx=(10, 1))
         # default
         self._selected_extension = StringVar(master=self._window, value='.mp3')  # noqa
         radiobutton_mp3 = Radiobutton(
@@ -34,5 +34,5 @@ class RadioButtonsMixin:
             master=self._radio_frame, text='video', value='video',
             variable=self._selected_download_type
         )
-        radiobutton_playlist.grid(column=3, row=0, padx=(10, 0))
-        radiobutton_video.grid(column=4, row=0)
+        radiobutton_playlist.grid(column=2, row=0, padx=(10, 0))
+        radiobutton_video.grid(column=3, row=0)

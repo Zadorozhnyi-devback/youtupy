@@ -55,7 +55,7 @@ class YouTupy(
         self._destination_path = self._get_default_download_path()
         self._destination_button = self._get_destination_button()
 
-        self._create_empty_strings(rows=[7])
+        self._create_empty_strings(rows=[4])
 
         self._window.mainloop()
 

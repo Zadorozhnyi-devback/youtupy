@@ -26,11 +26,11 @@ MY_FONT = 'Arial Bold'
 AVERAGE_DOWNLOAD_TIME = 6.5
 STEPS_AMOUNT = 20
 INPUT_CANVAS_KWARGS = {
-    'column': 0, 'row': 3, 'font_size': 14, 'padding_top': 0, 'long': 0,
+    'column': 0, 'row': 1, 'font_size': 14, 'padding_top': 0, 'long': 0,
     'text_id': '_input_text_id', 'text': INPUT_CANVAS_TEXT
 }
 MAIN_CANVAS_KWARGS = {
-    'column': 6, 'row': 0, 'font_size': 24, 'padding_top': 8,
+    'column': 1, 'row': 0, 'font_size': 24, 'padding_top': 8,
     'text_id': '_main_text_id', 'text': MAIN_CANVAS_TEXT, 'long': 200
 }
 UNWISHED_NAME_PARTS = [

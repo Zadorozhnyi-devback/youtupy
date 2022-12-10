@@ -15,7 +15,7 @@ DATA_FILES = [
 
 OPTIONS = {
     'packages': ['Cryptodome'],
-    'iconfile': 'static/jordan.icns',
+    'iconfile': 'app/static/jordan.icns',
     'plist': {
         'CFBundleDevelopmentRegion': 'English',
         'CFBundleIdentifier': 'Zadorozhnyi',

@@ -10,7 +10,7 @@ class ButtonsMixin:
             master=self._window, text='download', width='10',  # noqa
             fg='red', command=lambda: self._clicked_run_youtupy()  # noqa
         )
-        button.grid(column=6, row=5, sticky='W')
+        button.grid(column=1, row=2, sticky='W')
         return button
 
     def _get_cancel_loading_button(self) -> Button:
@@ -18,7 +18,7 @@ class ButtonsMixin:
             master=self._window, text='cancel', width='10',  # noqa
             fg='red', command=lambda: self._clicked_cancel_loading()  # noqa
         )
-        button.grid(column=6, row=5, sticky='W')
+        button.grid(column=1, row=2, sticky='W')
         return button
 
     def _get_destination_button(self) -> Button:
@@ -26,7 +26,7 @@ class ButtonsMixin:
             master=self._window, text='choose folder', width='12',  # noqa
             fg='red', command=self._clicked_choose_dir  # noqa
         )
-        button.grid(column=0, row=11, padx=10, sticky='W')
+        button.grid(column=0, row=6, padx=10, sticky='W')
 
         self._get_curr_path_label()  # noqa
         return button

@@ -21,7 +21,7 @@ class LabelsMixin:
             text=f'{CURR_PATH}: {self._destination_path}'  # noqa
         )
         self._curr_path_label.grid(
-            column=0, row=10, sticky='W', columnspan=100
+            column=0, row=5, sticky='W', columnspan=100
         )
 
     def _change_text_canvas(self, text: str) -> None:
