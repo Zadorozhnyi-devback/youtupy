@@ -16,14 +16,14 @@ TYPE_TO_METHOD_TABLE = {
 }
 
 # errors
-EMPTY_PLAYLIST = 'something went wrong. check the url'
+EMPTY_PLAYLIST = 'invalid url'
 
 
 # settings
 WINDOW_TITLE = 'youtupy'
-WINDOW_SIZE = '600x250'
+WINDOW_SIZE = '600x240'
 MY_FONT = 'Arial Bold'
-AVERAGE_DOWNLOAD_TIME = 7
+AVERAGE_DOWNLOAD_TIME = 6.5
 STEPS_AMOUNT = 20
 INPUT_CANVAS_KWARGS = {
     'column': 0, 'row': 3, 'font_size': 14, 'padding_top': 0, 'long': 0,

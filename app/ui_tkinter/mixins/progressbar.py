@@ -35,6 +35,6 @@ class ProgressBarMixin:
     def _create_progressbar(self) -> None:
         self._progressbar = Progressbar(
             master=self._window, mode='determinate',  # noqa
-            orient='horizontal', length=230
+            orient='horizontal', length=236
         )
-        self._progressbar.grid(column=0, row=0)
+        self._progressbar.grid(column=0, row=0, padx=(5, 0))
