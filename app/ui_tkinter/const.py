@@ -21,7 +21,7 @@ EMPTY_PLAYLIST = 'something went wrong. check the url'
 
 # settings
 WINDOW_TITLE = 'youtupy'
-WINDOW_SIZE = '800x600'
+WINDOW_SIZE = '600x250'
 MY_FONT = 'Arial Bold'
 AVERAGE_DOWNLOAD_TIME = 7
 STEPS_AMOUNT = 20

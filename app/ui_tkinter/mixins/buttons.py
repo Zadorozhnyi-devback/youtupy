@@ -18,7 +18,7 @@ class ButtonsMixin:
             master=self._window, text='choose folder', width='12',  # noqa
             fg='red', command=self._clicked_choose_dir  # noqa
         )
-        button.grid(column=0, row=11, sticky='W')
+        button.grid(column=0, row=11, padx=10, sticky='W')
 
         self._get_curr_path_label()  # noqa
         return button

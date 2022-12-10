@@ -8,7 +8,7 @@ __all__ = 'RadioButtonsMixin',
 class RadioButtonsMixin:
     def _create_extension_radiobuttons(self) -> None:
         self._radio_frame = Frame(master=self._window)  # noqa
-        self._radio_frame.grid(column=0, row=6, sticky='W')
+        self._radio_frame.grid(column=0, row=6, padx=10, sticky='W')
         # default
         self._selected_extension = StringVar(master=self._window, value='.mp3')  # noqa
         radiobutton_mp3 = Radiobutton(

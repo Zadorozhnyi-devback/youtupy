@@ -60,9 +60,9 @@ class YouTupy(
     def _get_default_download_path(self) -> str:
         cache = self._get_cache()
 
-        if 'download_path' in cache:
-            path = cache.get('download_path')
-        else:
-            path = f'/Users/{getpass.getuser()}/downloads/youtupy'
+        path = (
+            cache.get('download_path')
+            or f'/Users/{getpass.getuser()}/downloads/youtupy'
+        )
 
         return path

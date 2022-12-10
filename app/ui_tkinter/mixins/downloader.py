@@ -19,11 +19,11 @@ class DownloaderMixin:
     def _main_download(self) -> None:
         download_type = self._selected_download_type.get()  # noqa
         if self._validate_args(download_type=download_type):  # noqa
-            alias = download_type
             extension = self._selected_extension.get()  # noqa
-            if download_type == 'video' and extension == '.mp3':
-                alias = 'audio'
-            self._change_text_canvas(text=f'loading {alias}...')  # noqa
+
+            message = self._get_main_canvas_text(download_type, extension)
+            self._change_text_canvas(text=message)  # noqa
+
             self._download_button['state'] = 'disabled'  # noqa
 
             func = f'download_{download_type}'
@@ -41,6 +41,18 @@ class DownloaderMixin:
             self._progressbar.tkraise()  # noqa
             self._run_progressbar(main_process=main_process)  # noqa
             self._schedule_check(ms=1000, process=main_process)
+
+    def _get_main_canvas_text(self, download_type: str, extension: str) -> str:
+        if download_type == 'video':
+            if extension == '.mp3':
+                message = 'loading audio...'
+            else:
+                message = 'loading video...'
+
+        else:
+            message = f'loading playlist ({self._download_object.length})...'
+
+        return message
 
     def get_or_create_path(self, object_title) -> str:
         path = (
@@ -73,7 +85,7 @@ class DownloaderMixin:
     def _check_process_done(
         self, ms: int, process: Process, func_name: str
     ) -> None:
-        # If thread is done display message, activate button, finish pb
+        # If thread is done display message, activate button, finish bar
         if process.is_alive():
             getattr(self, func_name)(
                 ms=ms, process=process, func_name=func_name
