@@ -47,6 +47,8 @@ class YouTupy(
         self._input_canvas = self._get_canvas(kw=INPUT_CANVAS_KWARGS)
 
         self._download_button = self._get_download_button()
+        self._cancel_loading_button = self._get_cancel_loading_button()
+        self._cancel_loading_button.grid_remove()
 
         self._input_url = self._get_input_url()
 
