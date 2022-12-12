@@ -24,7 +24,14 @@ class ClickedMixin:
             if os.path.isdir(self._download_object_path):  # noqa
                 remove_dir(path=self._download_object_path)  # noqa
             else:
-                remove_file(path=self._download_object_path)  # noqa
+                temp_files = [
+                    f'{self._download_path}/{file_title}'
+                    for file_title in os.listdir(self._download_path)
+                    if '.temp.' in file_title
+                ]
+
+                for f in [*temp_files, self._download_object_path]:  # noqa
+                    remove_file(path=f)
 
     def _clicked_choose_dir(self) -> None:
         directory = filedialog.askdirectory(

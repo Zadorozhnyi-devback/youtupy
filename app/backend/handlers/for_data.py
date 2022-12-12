@@ -22,8 +22,7 @@ __all__ = (
     'download_video',
     'get_listdir',
     'remove_dir',
-    'remove_file',
-    'clean_na_from_mp3'
+    'remove_file'
 )
 
 
@@ -60,8 +59,6 @@ def download_object(
     module_name = sys.modules[__name__]
     args = [obj, path, extension]
     getattr(module_name, process_func)(*args)
-
-    clean_na_from_mp3(path)
 
     print('complete')
 
@@ -129,15 +126,3 @@ def remove_dir(path: str) -> None:
 
 def remove_file(path: str) -> None:
     os.remove(path=path)
-
-
-def clean_na_from_mp3(path: str) -> None:
-    files = [
-        str(file) for file in
-        Path(path).glob('*.mp3')
-        if str(file).split('.mp3')[0].endswith(' - NA')
-    ]
-    for f in files:
-        extension = f.rsplit('.')[-1]
-        file_name = f.rsplit(' - NA')[0]
-        os.rename(f, f'{file_name}.{extension}')
