@@ -2,21 +2,14 @@
 CURR_PATH = 'current folder'
 MAIN_CANVAS_TEXT = 'welcome to youtupy!'
 INPUT_CANVAS_TEXT = 'paste your link:'
-TYPE_TO_CLASS_TABLE = {
-    'playlist': 'Playlist',
-    'video': 'YouTube'
-}
-DOWNLOAD_CLASS_METHOD = {
-    'Playlist': 'title',
-    'YouTube': 'title'
-}
+
 TYPE_TO_METHOD_TABLE = {
     'playlist': 'videos',
     'video': 'title'
 }
 
 # errors
-EMPTY_PLAYLIST = 'invalid url'
+INVALID_URL_ERROR = 'invalid url'
 
 
 # settings

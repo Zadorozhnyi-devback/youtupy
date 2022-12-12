@@ -21,7 +21,7 @@ class ButtonsMixin:
         button.grid(column=1, row=2, sticky='W')
         return button
 
-    def _get_destination_button(self) -> Button:
+    def _get_download_path_button(self) -> Button:
         button = Button(
             master=self._window, text='choose folder', width='12',  # noqa
             fg='red', command=self._clicked_choose_dir  # noqa

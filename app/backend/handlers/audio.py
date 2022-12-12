@@ -3,7 +3,7 @@ import platform
 import os
 import subprocess
 
-import yt_dlp
+from yt_dlp import YoutubeDL
 
 
 __all__ = 'YoutubeAudioDownloader',
@@ -34,9 +34,8 @@ class YoutubeAudioDownloader:
     @staticmethod
     def get_download_path(kwargs: dict) -> str:
         path = kwargs.get('download_path')
-        if not path or not os.path.exists(path):
-            path = 'downloads'
-        return path
+        if path and os.path.exists(path):
+            return path
 
     @staticmethod
     def get_limit(kwargs: dict) -> int:
@@ -48,7 +47,6 @@ class YoutubeAudioDownloader:
     def get_opts(self) -> dict:
         """ Return youtube-dl options """
         yt_dlp_options = {
-            # PERMANENT options
             'quiet': True,
             'format': 'bestaudio/best',
             'ffmpeg_location': self.ffmpeg_path,
@@ -182,9 +180,9 @@ class YoutubeAudioDownloader:
         """
         Downloading mp3 for every YouTube video URL passed during execution
         """
-        with yt_dlp.YoutubeDL(self.opts) as mp3:
+        with CustomYoutubeDL(self.opts) as mp3:
             info = mp3.extract_info(url, download=False)
-            info['title'] = f"{info.get('artist', '')} - {info.get('title', '')}"
+            info['title'] = self.get_title(info)
 
             self.status[self.urls.index(url)] = (
                 f"{Color.WARNING}[downloading]{Color.ENDC}\t {info['title']}"
@@ -197,3 +195,35 @@ class YoutubeAudioDownloader:
                 f"{Color.OKGREEN}[finished]{Color.ENDC}\t {info['title']}"
             )
             self.print_status()
+
+    def get_title(self, info: dict = None) -> str:
+        if info:
+            title = get_title_from_info(info)
+        else:
+            with CustomYoutubeDL(self.opts) as mp3:
+                info = mp3.extract_info(self.urls[0], download=False)
+                title = get_title_from_info(info)
+
+        return title
+
+
+class CustomYoutubeDL(YoutubeDL):
+    """ Redefine 'prepare_filename' method, to clean duplicates in artists """
+
+    def prepare_filename(self, info_dict, dir_type='', warn=False):
+        old = super().prepare_filename(info_dict, dir_type, warn)
+
+        path = '/'.join(old.split('/')[:-1])
+        title = get_title_from_info(info_dict)
+
+        return f'{path}/{title}.mp3'
+
+
+def get_title_from_info(info: dict) -> str:
+    artists = ', '.join(sorted(set(info.get('artist', '').split(', '))))
+
+    title = '{artists} - {title}'.format(
+        artists=artists,
+        title=f"{info.get('title', '')}"
+    )
+    return title

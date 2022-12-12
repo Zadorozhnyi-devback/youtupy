@@ -18,7 +18,7 @@ class LabelsMixin:
         self._curr_path_label = Label(
             master=self._window,  # noqa
             font=(MY_FONT, 14),
-            text=f'{CURR_PATH}: {self._destination_path}'  # noqa
+            text=f'{CURR_PATH}: {self._download_path}'  # noqa
         )
         self._curr_path_label.grid(
             column=0, row=5, sticky='W', columnspan=100

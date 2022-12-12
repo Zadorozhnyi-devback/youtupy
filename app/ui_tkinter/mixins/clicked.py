@@ -1,10 +1,9 @@
 import getpass
-import os.path
+import os
 from pathlib import Path
-import shutil
 from tkinter import filedialog, messagebox
 
-from backend.handlers.for_data import get_clean_title
+from backend.handlers.for_data import remove_dir, remove_file
 from ui_tkinter.const import CURR_PATH
 
 
@@ -18,17 +17,14 @@ class ClickedMixin:
 
     def _clicked_cancel_loading(self) -> None:
         answer = messagebox.askyesno(message='cancel loading?')
-        if answer:
+        if answer is True:
             self._main_process.terminate()  # noqa
             self._progressbar.destroy()  # noqa
 
-            object_title = get_clean_title(title=self._download_object.title)  # noqa
-            path = self.get_or_create_path(object_title)  # noqa
-
-            if os.path.isdir(path):
-                shutil.rmtree(path)
+            if os.path.isdir(self._download_object_path):  # noqa
+                remove_dir(path=self._download_object_path)  # noqa
             else:
-                os.remove(path)
+                remove_file(path=self._download_object_path)  # noqa
 
     def _clicked_choose_dir(self) -> None:
         directory = filedialog.askdirectory(
@@ -38,11 +34,10 @@ class ClickedMixin:
             initialdir=f'/Users/{getpass.getuser()}/'
         )
         if directory:
-            full_path = str(Path(directory).resolve())
-            self._destination_path = full_path
+            self._download_path = str(Path(directory).resolve())
 
-            self._add_path_in_cache(full_path)  # noqa
+            self._add_path_in_cache(self._download_path)  # noqa
 
         self._curr_path_label.configure(  # noqa
-            text=f'{CURR_PATH}: {self._destination_path}'
+            text=f'{CURR_PATH}: {self._download_path}'
         )

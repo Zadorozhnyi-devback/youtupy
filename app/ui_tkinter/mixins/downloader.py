@@ -4,12 +4,12 @@ from time import sleep
 
 from pytube import YouTube, Playlist
 
+from backend.handlers.audio import YoutubeAudioDownloader
 from backend.handlers.for_data import (
     get_download_object,
     download_object,
     get_clean_title
 )
-from ui_tkinter.const import TYPE_TO_CLASS_TABLE
 
 
 __all__ = 'DownloaderMixin',
@@ -17,24 +17,28 @@ __all__ = 'DownloaderMixin',
 
 class DownloaderMixin:
     def _main_download(self) -> None:
-        download_type = self._selected_download_type.get()  # noqa
-        if self._validate_args(download_type=download_type):  # noqa
-            extension = self._selected_extension.get()  # noqa
+        self._download_type = self._selected_download_type.get()  # noqa
+        self._download_class = (
+            Playlist if self._download_type == 'playlist' else YouTube
+        )
+        if self._validate_args():  # noqa
+            text = self._get_main_canvas_loading_text()
+            self._change_text_canvas(text=text)  # noqa
 
-            message = self._get_main_canvas_text(download_type, extension)
-            self._change_text_canvas(text=message)  # noqa
+            self._switch_download_and_cancel_button()  # noqa
 
-            func = f'download_{download_type}'
+            func = f'download_{self._download_type}'
 
-            object_title = get_clean_title(title=self._download_object.title)
-            path = self.get_or_create_path(object_title)
-
-            self._download_button.grid_remove()  # noqa
-            self._cancel_loading_button.grid()  # noqa
+            load_path = self.get_load_path()
 
             self._main_process = Process(
                 target=download_object,
-                args=(self._download_object, path, extension, func)
+                args=(
+                    self._download_object,
+                    load_path,
+                    self._extension,
+                    func
+                )
             )
             self._main_process.start()
             print("main process started")
@@ -43,35 +47,51 @@ class DownloaderMixin:
             self._run_progressbar()  # noqa
             self._schedule_check(ms=1000)
 
-    def _get_main_canvas_text(self, download_type: str, extension: str) -> str:
-        if download_type == 'video':
-            if extension == '.mp3':
-                message = 'loading audio...'
-            else:
-                message = 'loading video...'
+    def get_load_path(self) -> str:
+        """
+        Return path: str where to load audio/video
 
-        else:
-            message = f'loading playlist ({self._download_object.length})...'
-
-        return message
-
-    def get_or_create_path(self, object_title) -> str:
+            * For playlist including playlist dir
+        """
         path = (
-            self._destination_path  # noqa
-            if isinstance(self._download_object, YouTube)
-            else f'{self._destination_path}/{object_title}'  # noqa
+            self._download_path  # noqa
+            if self._download_class is YouTube
+            else f'{self._download_path}/{self._download_object_title}'  # noqa
         )
         os.makedirs(path, exist_ok=True)
         return path
 
-    def _create_main_process_vars(self, download_type: str) -> None:
-        input_url = self._input_url.get()  # noqa
-        class_name = TYPE_TO_CLASS_TABLE[download_type]
+    def _get_main_canvas_loading_text(self) -> str:
+        if self._download_type == 'video':
+            if self._extension == '.mp3':
+                text = 'loading audio...'
+            else:
+                text = 'loading video...'
+
+        else:
+            text = f'loading playlist ({self._download_object.length})...'
+
+        return text
+
+    def _create_main_process_vars(self) -> None:
+        self._extension = self._selected_extension.get()  # noqa
         self._download_object = get_download_object(
-            class_name=class_name, url=input_url
+            cls=self._download_class,
+            url=self._input_url.get()  # noqa
         )
-        self._download_class = (
-            Playlist if download_type == 'playlist' else YouTube
+
+        if self._download_type == 'playlist':
+            object_title = get_clean_title(title=self._download_object.title)  # noqa
+        else:
+            mp3_loader = YoutubeAudioDownloader(
+                urls=[self._download_object.watch_url],  # noqa
+                download_path=self._download_path  # noqa
+            )
+            object_title = f'{mp3_loader.get_title()}{self._extension}'
+
+        self._download_object_title = object_title
+        self._download_object_path = (
+            f'{self._download_path}/{self._download_object_title}'  # noqa
         )
 
     def _schedule_check(
@@ -86,7 +106,7 @@ class DownloaderMixin:
     def _check_process_done(self, ms: int, func_name: str) -> None:
         if self._main_process.is_alive():
             getattr(self, func_name)(ms=ms, func_name=func_name)
-        else:  # If thread is done display message, switch button, finish bar
+        else:
             if self._progressbar.winfo_exists():  # noqa
                 # костыль для добивания прогрессбара
                 while self._progressbar['value'] < 100:  # noqa
