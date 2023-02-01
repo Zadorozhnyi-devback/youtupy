@@ -14,6 +14,7 @@ class ProgressBarMixin:
     def _update_progressbar(self, ms: int) -> None:
         if self._progressbar.winfo_exists():
             self._increment_progressbar()
+
             if self._progressbar['value'] == 95:
                 self._change_text_canvas(text='almost done...')  # noqa
                 return

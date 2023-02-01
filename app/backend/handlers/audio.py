@@ -165,7 +165,7 @@ class YoutubeAudioDownloader:
 
     def print_status(self):
         """ Printing on terminal """
-        self.clear()
+        # self.clear()
         print(
             f"{Color.ERROR}yt{Color.WARNING}mp3-dl {Color.OKGREEN}v3.0 {Color.OKCYAN}~poseidon-code{Color.ENDC}"
             '\n'    f"{Color.ERROR}|{Color.ENDC} URLs                       : {len(self.urls)}"
@@ -226,4 +226,7 @@ def get_title_from_info(info: dict) -> str:
         artists=artists,
         title=f"{info.get('title', '')}"
     )
+
+    title = title.strip(' ').strip('-').strip()
+
     return title
