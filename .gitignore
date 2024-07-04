@@ -5,6 +5,7 @@ __pycache__
 test
 playlists
 downloads
+cache.json
 
 
 # Environment files
