@@ -1,3 +1,4 @@
+from time import sleep
 from typing import Union, Type, TYPE_CHECKING
 
 from backend.handlers.for_data import get_listdir
@@ -20,7 +21,15 @@ def init_load_object_attempt(
 ) -> None:
     """ init object and call some its method to catch errors """
     obj = cls(url=url)
-    getattr(obj, 'title')
+    while True:
+        try:
+            getattr(obj, 'title')
+            break
+        except:
+            print("Failed to get name. Retrying...")
+            sleep(1)
+            obj = cls(url)
+            continue
 
 
 def validate_object(
