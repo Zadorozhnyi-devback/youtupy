@@ -1,6 +1,6 @@
 from urllib.error import URLError
 
-from pytube.exceptions import RegexMatchError
+from pytube.exceptions import RegexMatchError, PytubeError
 
 from backend.validators import (
     validate_object,
@@ -31,6 +31,9 @@ class YouTupyValidator:
             self._change_text_canvas(  # noqa
                 text=f'invalid link for {self._download_type}'  # noqa
             )
+            return False
+        except PytubeError:
+            self._change_text_canvas('pytube error')  # noqa
             return False
         return getattr(self, f'_validate_{self._download_type}')()  # noqa
 
