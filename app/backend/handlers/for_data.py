@@ -1,7 +1,6 @@
 import os
 import shutil
 import sys
-from pathlib import Path
 from typing import List, Union, Type, TYPE_CHECKING
 from urllib.error import URLError
 
@@ -109,6 +108,7 @@ def download_video(video: 'YouTube', path: str, extension: str) -> None:
     else:
         title = f'{mp3_loader.get_title()}.mp4'
         video.streams.filter(
+            progressive=True,
             file_extension='mp4',
         ).get_highest_resolution().download(
             output_path=path, filename=title
