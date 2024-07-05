@@ -1,9 +1,3 @@
-requirements:
-```sh
-    python==3.8
-    *pip install -r requirements.txt
-```
-
 # Youtupy
 
 Youtupy is a small Python application with a graphical user interface (GUI) built using Tkinter. It leverages the Pytube library to download YouTube playlists and single songs/videos to a specified directory on your PC.
@@ -19,17 +13,17 @@ Youtupy is a small Python application with a graphical user interface (GUI) buil
 
 ## Screenshots
 
-*Main Screen*
+*Main Screen*<br>
 ![Youtupy Main Screen](screenshots/1.jpeg)
 
 *Paste playlist link*
-![Download in Progress](screenshots/2.jpeg)
+![Paste playlist link](screenshots/2.jpeg)
 
 *Download in Progress*
 ![Download in Progress](screenshots/3.jpeg)
 
 *Playlist loaded*
-![Download in Progress](screenshots/4.jpeg)
+![Playlist loaded](screenshots/4.jpeg)
 
 ## Installation
 
