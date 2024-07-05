@@ -165,7 +165,7 @@ class YoutubeAudioDownloader:
 
     def print_status(self):
         """ Printing on terminal """
-        # self.clear()
+        self.clear()
         print(
             f"{Color.ERROR}yt{Color.WARNING}mp3-dl {Color.OKGREEN}v3.0 {Color.OKCYAN}~poseidon-code{Color.ENDC}"
             '\n'    f"{Color.ERROR}|{Color.ENDC} URLs                       : {len(self.urls)}"
@@ -210,13 +210,13 @@ class YoutubeAudioDownloader:
 class CustomYoutubeDL(YoutubeDL):
     """ Redefine 'prepare_filename' method, to clean duplicates in artists """
 
-    def prepare_filename(self, info_dict, dir_type='', warn=False):
-        old = super().prepare_filename(info_dict, dir_type, warn)
+    def prepare_filename(self, info_dict, dir_type='', **kwargs):
+        old = super().prepare_filename(info_dict, dir_type, **kwargs)
 
         path = '/'.join(old.split('/')[:-1])
         title = get_title_from_info(info_dict)
 
-        return f'{path}/{title}.mp3'
+        return f'{path}/{title}'
 
 
 def get_title_from_info(info: dict) -> str:
