@@ -36,5 +36,5 @@ Youtupy is a small Python application with a graphical user interface (GUI) buil
 First, ensure you have the required libraries installed. You can use `pip` to install the necessary packages.
 
 ```sh
-    pip install -r requirements.txt 
+    pip install -r requirements.txt
 ```
